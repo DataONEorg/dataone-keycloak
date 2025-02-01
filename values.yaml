@@ -1,0 +1,98 @@
+## @section Global Properties Shared Across Sub-Charts Within This Deployment
+##
+global:
+    ## @param global.storageClass default name of the storageClass to use for PVs
+    storageClass: csi-cephfs-sc
+
+## @section Networking & Monitoring
+##
+
+## Ingress is a collection of rules that allow inbound connections to reach the endpoints defined
+## by a backend. An Ingress can be configured to give services externally-reachable urls, load
+## balance traffic, terminate SSL, offer name based virtual hosting etc.
+##
+ingress:
+  ## @param ingress.enabled Enable or disable the ingress
+  ##
+  enabled: true
+
+  ## @param ingress.className ClassName of the ingress provider in your cluster
+  ##  Inspect available classes in your cluster using:    $ kubectl get ingressclasses
+  ##
+  ## className: "traefik" -- For Rancher Desktop (provided you have traefik enabled:
+  ##     'preferences' -> 'kubernetes' -> 'enable traefik')
+  ## className: "nginx" -- For production, or to use certificates locally. Also:
+  ## - disable traefik ('preferences' -> 'kubernetes' -> uncheck 'enable traefik')
+  ## - install nginx:
+  ##   $  helm upgrade --install ingress-nginx ingress-nginx  \
+  ##        --repo https://kubernetes.github.io/ingress-nginx \
+  ##        --namespace ingress-nginx --create-namespace      \
+  ##        --set controller.allowSnippetAnnotations=true
+  ##
+  className: "nginx"
+
+  ## @param ingress.hostname host name to be used for this ingress endpoint
+  ##
+  ## hostname: "keycloack.example.com"
+  ##
+  hostname: "auth.test.dataone.org"
+
+  ## @param ingress.annotations Annotations for the ingress
+  ##
+  ## NOTE: You do NOT need to do anything here for DataONE mutual authentication with x509
+  ## client-side certs, provided:
+  ## 1. you are using the Kubernetes open source community version of the nginx ingress
+  ##    (see https://github.com/kubernetes/ingress-nginx)
+  ## 2. you have set ingress.className to nginx, and
+  ## 3. you have set up ingress.tls correctly for https access, and
+  ## 4. you have set the correct parameters in the metacat section
+  ##    (see `metacat.dataone.certificate.fromHttpHeader.enabled`, above, for more details)
+  ##
+  ## For other nginx annotation options, see:
+  ## https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/annotations/
+  ##
+  annotations:
+    # https://nginx.org/en/docs/http/ngx_http_core_module.html#client_body_buffer_size
+    nginx.ingress.kubernetes.io/client-body-buffer-size: "1m"
+    # https://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size
+    nginx.ingress.kubernetes.io/client_max_body_size: "10m"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+
+  ## @param ingress.tls The TLS configuration
+  ##
+  ## Example:
+  ##  tls:
+  ##    - hosts:
+  ##        - arcticdata.io
+  ##        - www.arcticdata.io
+  ##        - permafrost.arcticdata.io
+  ##      secretName: ingress-nginx-tls-cert
+  ##
+  ## To disable TLS altogether (i.e. use http only), set:
+  ##    tls: []
+  ##
+  ## To have tls.hosts auto-populated with the external hostname (from metacat.server.name),
+  ## set only the secretName (always required), and leave hosts as an empty list - i.e:
+  ##
+  ##    tls:
+  #       - hosts: []
+  #         secretName: tls-secret-values-yaml
+  ##
+  tls:
+    - hosts:
+        - auth.test.dataone.org
+      secretName: ingress-nginx-tls-cert
+
+# adminIngress:
+#       enabled: false
+#       hostname: auth-admin.test.dataone.org
+#       keycloakConfigCli:
+#             enabled: true
+#             configuration:
+#                   master.json: |
+#                         {
+#                         "realm" : "master",
+#                         "attributes": {
+#                               "frontendUrl": "https://auth-admin.test.dataone.org"
+#                         }
+#                         }
