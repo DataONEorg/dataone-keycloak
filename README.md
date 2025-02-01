@@ -1,6 +1,11 @@
-# Keycloak Installation
+# DataONE Keycloak Deployment
 
-Following instructions from Bitnami for their helm chart install.
+This is an experimental repository to track deployment of the CNCF Keycloak platform as a potential
+component within the DataONE authentication infrastructure.
+
+Currently, we are following instructions from Bitnami for their helm chart install. 
+Eventually, we wouold want to develop our own helm chart that likely depends on the 
+Bitnami Keycloak as a subchart dependency.
 
 ## Info
 
