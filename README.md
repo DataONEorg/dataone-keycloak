@@ -11,10 +11,10 @@ This is an experimental repository to track deployment of the CNCF Keycloak plat
 component within the DataONE authentication infrastructure.
 
 Currently, we are following instructions from Bitnami for their helm chart install. 
-Eventually, we wouold want to develop our own helm chart that likely depends on the 
+Eventually, we would want to develop our own helm chart that likely depends on the 
 Bitnami Keycloak as a subchart dependency.
 
-DataONE in general, and HashStore in particular, are open source, community projects.  We [welcome contributions](./CONTRIBUTING.md) in many forms, including code, graphics, documentation, bug reports, testing, etc.  Use the [DataONE discussions](https://github.com/DataONEorg/dataone/discussions) to discuss these contributions with us.
+DataONE in general is an open source, community project.  We [welcome contributions](./CONTRIBUTING.md) in many forms, including code, graphics, documentation, bug reports, testing, etc.  Use the [DataONE discussions](https://github.com/DataONEorg/dataone/discussions) to discuss these contributions with us.
 
 
 ## Documentation

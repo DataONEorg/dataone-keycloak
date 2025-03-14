@@ -1,8 +1,25 @@
+# helm upgrade --install -n keycloak keycloak oci://registry-1.docker.io/bitnamicharts/keycloak --version 24.4.12 -f values.yaml
+
 ## @section Global Properties Shared Across Sub-Charts Within This Deployment
 ##
 global:
     ## @param global.storageClass default name of the storageClass to use for PVs
     storageClass: csi-cephfs-sc
+
+postgresql:
+    image:
+        tag: 16
+    auth:
+        existingSecret: "keycloak-postgresql"
+
+auth:
+  ## @param auth.adminUser Keycloak administrator user
+  adminUser: kcadmin
+  ## @param auth.existingSecret Existing secret containing Keycloak admin password
+  existingSecret: "keycloak"
+
+serviceAccount:
+    create: false
 
 ## @section Networking & Monitoring
 ##
@@ -78,10 +95,11 @@ ingress:
   #       - hosts: []
   #         secretName: tls-secret-values-yaml
   ##
-  tls:
-    - hosts:
-        - auth.test.dataone.org
-      secretName: ingress-nginx-tls-cert
+  tls: true
+      #enabled: true
+        #- hosts:
+        #- auth.test.dataone.org
+        #secretName: ingress-nginx-tls-cert
 
 # adminIngress:
 #       enabled: false
