@@ -6,12 +6,22 @@ global:
     ## @param global.storageClass default name of the storageClass to use for PVs
     storageClass: csi-cephfs-sc
 
+image:
+    repository: "bitnamilegacy/keycloak"
+    tag: 26.3.2
+
 postgresql:
     image:
         repository: "bitnamilegacy/postgresql"
         tag: 16
     auth:
         existingSecret: "keycloak-postgresql"
+
+keycloakConfigCli:
+    image:
+        registry: docker.io
+        repository: bitnamilegacy/keycloak-config-cli
+        tag: 6.4.0-debian-12-r10
 
 auth:
   ## @param auth.adminUser Keycloak administrator user
