@@ -1,3 +1,7 @@
 global:
     # storageClass: csi-cephfs-sc-ephemeral
     storageClass: csi-cephfs-sc
+postgresql:
+    image:
+        repository: "bitnamilegacy/postgresql"
+        tag: 16

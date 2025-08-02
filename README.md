@@ -86,6 +86,23 @@ WARNING: There are "resources" sections in the chart not set. Using "resourcesPr
   - resources
 +info https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
 ```
+
+## Adding ORCID provider
+
+See: https://github.com/eosc-kc/keycloak-orcid
+
+```
+$ kubectl cp -n keycloak keycloak-orcid.jar keycloak-0:/opt/bitnami/keycloak/providers -c keycloak
+# alternatively download with curl
+# keycloak@keycloak-0:/opt/bitnami/keycloak/providers$ curl "https://github.com/eosc-kc/keycloak-orcid/releases/download/1.4.0/keycloak-orcid.jar" -o /opt/bitnami/keycloak/providers/keycloak-orcid.jar
+# exec into container and rebuild
+keycloak@keycloak-0:/opt/bitnami/keycloak/providers$ bash /opt/bitnami/keycloak/bin/kc.sh build
+Appending additional Java properties to JAVA_OPTS
+WARNING: The following run time options were found, but will be ignored during build time: kc.spi-admin-realm, kc.cache, kc.cache-stack, kc.db-url, kc.db-username, kc.db-password, kc.hostname, kc.hostname-strict, kc.http-enabled, kc.http-port, kc.https-port, kc.log-console-output, kc.log-level, kc.bootstrap-admin-username, kc.bootstrap-admin-password
+
+Updating the configuration and installing your custom providers, if any. Please wait.
+```
+
 ## Usage Example
 
 To view more details about the Public API - see 'hashstore.py` interface documentation

@@ -8,6 +8,7 @@ global:
 
 postgresql:
     image:
+        repository: "bitnamilegacy/postgresql"
         tag: 16
     auth:
         existingSecret: "keycloak-postgresql"
@@ -20,6 +21,18 @@ auth:
 
 serviceAccount:
     create: false
+
+## @section Custom Providers
+##
+## Install custom providers during init (either by pulling from external http site, or unpack from a config map and copy
+
+        #initdbScripts:
+        #load_custom_provider_script.sh: |
+        ##!/bin/bash
+        #echo "load_custom_provider_script.sh"
+        ##curl -sS https://xxx/my_custom_provider.jar -o /opt/bitnami/keycloak/providers/my_custom_provider.jar
+        #curl -sS "https://github.com/eosc-kc/keycloak-orcid/releases/download/1.4.0/keycloak-orcid.jar" -o /opt/bitnami/keycloak/providers/keycloak-orcid.jar
+        ##kc.sh build
 
 ## @section Networking & Monitoring
 ##
@@ -114,3 +127,4 @@ ingress:
 #                               "frontendUrl": "https://auth-admin.test.dataone.org"
 #                         }
 #                         }
+
