@@ -103,6 +103,23 @@ WARNING: The following run time options were found, but will be ignored during b
 Updating the configuration and installing your custom providers, if any. Please wait.
 ```
 
+## Switching to Codecentric chart
+
+The Codencentric helm chart uses the stock Keycloak image and deploys it as configured. It does not install it's own database, so one must provide a datatbase instance.
+
+### Starting expermiment: use existing bitnami postgres as installed with codecentric keycloak
+
+I updated the Codecentric values file in `values-kcx.yaml`, including setting `tag: 26.3.2` to use Keycloak 26.3.2. 
+
+- Exec into bitnami postgres container, and using `psql -U postgres postgres` create a new `keycloak` database
+  - `CREATE DATABASE keycloak WITH OWNER = bn_keycloak ENCODING = 'UTF8' LC_COLLATE = 'en_US.UTF-8';`
+- Ensure the `keycloak-postgresql` secret is already loaded with a `password` key
+- Ensure the `keycloak` secret is already loaded with a `admin-password` key
+- Install / upgrade the codecentric chart using a values file that configures the DB parameters, as well as the ingress
+  - Example in values-kcx.yaml
+  - `helm upgrade keycloakx oci://ghcr.io/codecentric/helm-charts/keycloakx --version 7.0.1 -n keycloak --values values-kcx.yaml`
+- The keycloak instance is now deployed at the ingress (e.g., https://auth.test.dataone.org/auth)
+
 ## Usage Example
 
 To view more details about the Public API - see 'hashstore.py` interface documentation
