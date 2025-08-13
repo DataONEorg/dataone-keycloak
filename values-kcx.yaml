@@ -79,6 +79,20 @@ securityContext:
 
 # Additional init containers, e. g. for providing custom themes
 extraInitContainers: ""
+extraInitContainers: |
+  - name: providers-init
+    image: busybox
+    imagePullPolicy: IfNotPresent
+    command:
+      - sh
+    args:
+      - -c
+      - |
+        echo "Downloading providers..."
+        wget -O "/providers/keycloak-orcid-1.4.0.jar" "https://github.com/eosc-kc/keycloak-orcid/releases/download/1.4.0/keycloak-orcid.jar"
+    volumeMounts:
+      - name: providers
+        mountPath: /providers
 
 # When using service meshes which rely on a sidecar, it may be necessary to skip init containers altogether,
 # since the sidecar doesn't start until the init containers are done, and the sidecar may be required
@@ -220,10 +234,14 @@ resources: {}
   #   memory: "1024Mi"
 
 # Add additional volumes, e. g. for custom themes
-extraVolumes: ""
+extraVolumes: |
+  - name: providers
+    emptyDir: {}
 
 # Add additional volumes mounts, e. g. for custom themes
-extraVolumeMounts: ""
+extraVolumeMounts: |
+  - name: providers
+    mountPath: /opt/keycloak/providers
 
 # Add additional ports, e. g. for admin console or exposing JGroups ports
 extraPorts: []

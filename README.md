@@ -1,16 +1,16 @@
 ## DataONE Keycloak Deployment
 
-- **Authors**: Last, First (ORCID); ...
+- **Authors**: Jones, Matthew B. (ORCID); ...
 - **License**: [Apache 2](http://opensource.org/licenses/Apache-2.0)
-- [Package source code on GitHub](https://github.com/DataONEorg/reponame)
-- [**Submit Bugs and feature requests**](https://github.com/DataONEorg/reponame/issues)
+- [Package source code on GitHub](https://github.com/DataONEorg/dataone-keycloak)
+- [**Submit Bugs and feature requests**](https://github.com/DataONEorg/dataone-keycloak/issues)
 - Contact us: support@dataone.org
 - [DataONE discussions](https://github.com/DataONEorg/dataone/discussions)
 
 This is an experimental repository to track deployment of the CNCF Keycloak platform as a potential
 component within the DataONE authentication infrastructure.
 
-Currently, we are following instructions from Bitnami for their helm chart install. 
+Currently, we are following instructions from Bitnami for their helm chart install for Postgres. 
 Eventually, we would want to develop our own helm chart that likely depends on the 
 Bitnami Keycloak as a subchart dependency.
 
@@ -120,20 +120,64 @@ I updated the Codecentric values file in `values-kcx.yaml`, including setting `t
   - `helm upgrade keycloakx oci://ghcr.io/codecentric/helm-charts/keycloakx --version 7.0.1 -n keycloak --values values-kcx.yaml`
 - The keycloak instance is now deployed at the ingress (e.g., https://auth.test.dataone.org/auth)
 
-## Usage Example
+## Setting up CNPG postgres
 
-To view more details about the Public API - see 'hashstore.py` interface documentation
+Create a Postgres cluster for keycloak:
 
-```py
-from product import Product
+```
+❯ k8 -n keycloak apply -f postgres-cluster.yaml
+cluster.postgresql.cnpg.io/keycloak-pg created
+```
 
-# Example code here...
+After a few minutes, CNPG will spin up the postgres replicas, and you can view the status of the cluster using the `kubectl cnpg` plugin:
 
+```
+❯ k8 cnpg status keycloak-pg -n keycloak
+Cluster Summary
+Name                 keycloak/keycloak-pg
+System ID:           7538165093337247771
+PostgreSQL Image:    ghcr.io/cloudnative-pg/postgresql:17.5
+Primary instance:    keycloak-pg-1
+Primary start time:  2025-08-13 20:10:44 +0000 UTC (uptime 1m28s)
+Status:              Cluster in healthy state
+Instances:           3
+Ready instances:     3
+Size:                126M
+Current Write LSN:   0/6000060 (Timeline: 1 - WAL File: 000000010000000000000006)
+
+Continuous Backup status
+Not configured
+
+Streaming Replication status
+Replication Slots Enabled
+Name           Sent LSN   Write LSN  Flush LSN  Replay LSN  Write Lag  Flush Lag  Replay Lag  State      Sync State  Sync Priority  Replication Slot
+----           --------   ---------  ---------  ----------  ---------  ---------  ----------  -----      ----------  -------------  ----------------
+keycloak-pg-2  0/6000060  0/6000060  0/6000060  0/6000060   00:00:00   00:00:00   00:00:00    streaming  async       0              active
+keycloak-pg-3  0/6000060  0/6000060  0/6000060  0/6000060   00:00:00   00:00:00   00:00:00    streaming  async       0              active
+
+Instances status
+Name           Current LSN  Replication role  Status  QoS         Manager Version  Node
+----           -----------  ----------------  ------  ---         ---------------  ----
+keycloak-pg-1  0/6000060    Primary           OK      BestEffort  1.27.0           k8s-dev-node-3
+keycloak-pg-2  0/6000060    Standby (async)   OK      BestEffort  1.27.0           k8s-dev-node-1
+keycloak-pg-3  0/6000060    Standby (async)   OK      BestEffort  1.27.0           k8s-dev-node-2
+```
+
+Now there are three keycloak Postgres replicas up and running. THe primary `keycloak-pg-rw` should be used for read-write operations, and the other replicas (`keycloak-pg-ro`, `keycloak-pg-r`) can be used for read queries and will help scale the application. Under heavy loads, in theory we can create more replicas with `kubectl scale` to serve higher read-only query loads.
+
+```
+❯ k8 -n keycloak get services
+NAME                     TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)                    AGE
+keycloak-pg-r            ClusterIP   10.111.28.124    <none>        5432/TCP                   3m43s
+keycloak-pg-ro           ClusterIP   10.110.90.138    <none>        5432/TCP                   3m43s
+keycloak-pg-rw           ClusterIP   10.109.57.188    <none>        5432/TCP                   3m43s
+keycloakx-headless       ClusterIP   None             <none>        80/TCP                     4d23h
+keycloakx-http           ClusterIP   10.101.226.135   <none>        9000/TCP,80/TCP,8443/TCP   4d23h
 ```
 
 ## License
 ```
-Copyright [2024] [Regents of the University of California]
+Copyright [2025] [Regents of the University of California]
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
