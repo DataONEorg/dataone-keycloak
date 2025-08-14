@@ -436,17 +436,14 @@ database:
   # don't create secret for db password. Instead use existing k8s secret
   # existingSecret: "my-existent-dbpass-secret"
   # existingSecretKey: "password"
-  existingSecret: "keycloak-postgresql"
+  existingSecret: "keycloak-pg"
   existingSecretKey: "password"
   # E.g. dev-file, dev-mem, mariadb, mssql, mysql, oracle or postgres
   vendor: postgres
-  hostname: keycloak-postgresql
+  hostname: keycloak-pg-rw
   port: 5432
   database: keycloak
-      # bitnami_keycloak
-  username: bn_keycloak
-      # bn_keycloak
-  #password:
+  username: keycloak
 
 cache:
   # Use "custom" to disable automatic cache configuration

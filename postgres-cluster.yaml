@@ -4,6 +4,17 @@ metadata:
   name: keycloak-pg
 spec:
   instances: 3
+  bootstrap:
+    initdb:
+      database: keycloak
+      owner: keycloak
+      secret:
+        name: keycloak-pg
+      encoding: UTF8
+      localeProvider: icu
+      icuLocale: en_US
+      localeCType: en_US.UTF-8
+      localeCollate: en_US.UTF-8
   storage:
     storageClass: csi-cephfs-sc
     size: 5Gi
