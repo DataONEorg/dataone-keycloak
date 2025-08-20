@@ -77,8 +77,9 @@ securityContext:
   runAsUser: 1000
   runAsNonRoot: true
 
-# Additional init containers, e. g. for providing custom themes
-extraInitContainers: ""
+# Additional init containers, e. g. for providing custom themes and providers
+# These are responsible for copying themes and providers to their installed locations in /opt/keycloak/{themes,providers}
+# Currently this does so by mounting an EmptyDir volume first in the initcontainer, copying files to it, then mounting it in the target container
 extraInitContainers: |
   - name: providers-init
     image: busybox
@@ -127,6 +128,9 @@ command:
   - "--hostname-strict=false"
   - "--spi-events-listener-jboss-logging-success-level=info"
   - "--spi-events-listener-jboss-logging-error-level=warn"
+  - "--spi-theme--static-max-age=-1"
+  - "--spi-theme--cache-themes=false"
+  - "--spi-theme--cache-templates=false"
 
 ## Overrides the default args for the Keycloak container
 args: []
@@ -237,11 +241,16 @@ resources: {}
 extraVolumes: |
   - name: providers
     emptyDir: {}
+  - name: themes
+    persistentVolumeClaim: 
+        claimName: keycloak-themes
 
 # Add additional volumes mounts, e. g. for custom themes
 extraVolumeMounts: |
   - name: providers
     mountPath: /opt/keycloak/providers
+  - name: themes
+    mountPath: /opt/keycloak/themes
 
 # Add additional ports, e. g. for admin console or exposing JGroups ports
 extraPorts: []
@@ -434,11 +443,8 @@ dbchecker:
 
 database:
   # don't create secret for db password. Instead use existing k8s secret
-  # existingSecret: "my-existent-dbpass-secret"
-  # existingSecretKey: "password"
   existingSecret: "keycloak-pg"
   existingSecretKey: "password"
-  # E.g. dev-file, dev-mem, mariadb, mssql, mysql, oracle or postgres
   vendor: postgres
   hostname: keycloak-pg-rw
   port: 5432
