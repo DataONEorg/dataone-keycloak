@@ -7,18 +7,18 @@ metadata:
   name: {{ .Release.Name }}-cnpg
   namespace: {{ .Release.Namespace }}
 spec:
-  instances: {{ .Values.keycloak.database.replicas }}
+  instances: {{ .Values.keycloakx.database.replicas }}
   bootstrap:
     initdb:
-      database: {{ .Values.keycloak.database.database }}
-      owner: {{ .Values.keycloak.database.username }}
+      database: {{ .Values.keycloakx.database.database }}
+      owner: {{ .Values.keycloakx.database.username }}
       secret:
-        name: {{ .Values.keycloak.database.existingSecret }}
+        name: {{ .Values.keycloakx.database.existingSecret }}
       encoding: UTF8
       localeProvider: icu
       icuLocale: en_US
       localeCType: en_US.UTF-8
       localeCollate: en_US.UTF-8
   storage:
-    storageClass: {{ .Values.keycloak.database.storageClass }}
-    size: {{ .Values.keycloak.database.size }}
+    storageClass: {{ .Values.keycloakx.database.storageClass }}
+    size: {{ .Values.keycloakx.database.size }}

@@ -28,3 +28,9 @@ version: 0.1.0
 # follow Semantic Versioning. They should reflect the version the application is using.
 # It is recommended to use it with quotes.
 appVersion: "7.0.1"
+
+dependencies:
+  - name: keycloakx
+    repository: oci://ghcr.io/codecentric/helm-charts
+    version: 7.0.1
+    #condition: global.includeKeycloak
