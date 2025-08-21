@@ -463,7 +463,7 @@ keycloakx:
     existingSecret: keycloak-pg
     existingSecretKey: password
     vendor: postgres
-    hostname: ${RELEASE_NAME}-cnpg-rw
+    hostname: keycloakx-cnpg-rw
     port: 5432
 
   cache:
