@@ -1,20 +1,24 @@
+## Create a PostgreSQL cluster using the CloudNative-PG operator
+## (https://github.com/cloudnative-pg/cloudnative-pg)
+##
 apiVersion: postgresql.cnpg.io/v1
 kind: Cluster
 metadata:
-  name: keycloak-pg
+  name: {{ .Release.Name }}-cnpg
+  namespace: {{ .Release.Namespace }}
 spec:
-  instances: 3
+  instances: {{ .Values.keycloak.database.replicas }}
   bootstrap:
     initdb:
-      database: keycloak
-      owner: keycloak
+      database: {{ .Values.keycloak.database.database }}
+      owner: {{ .Values.keycloak.database.username }}
       secret:
-        name: keycloak-pg
+        name: {{ .Values.keycloak.database.existingSecret }}
       encoding: UTF8
       localeProvider: icu
       icuLocale: en_US
       localeCType: en_US.UTF-8
       localeCollate: en_US.UTF-8
   storage:
-    storageClass: csi-cephfs-sc
-    size: 5Gi
+    storageClass: {{ .Values.keycloak.database.storageClass }}
+    size: {{ .Values.keycloak.database.size }}
