@@ -125,6 +125,7 @@ keycloakx:
     - "--spi-theme--static-max-age=-1"
     - "--spi-theme--cache-themes=false"
     - "--spi-theme--cache-templates=false"
+    - "--log-level=debug"
 
   ## Overrides the default args for the Keycloak container
   args: []
@@ -318,7 +319,7 @@ keycloakx:
     annotations:
       ## Resolve HTTP 502 error using ingress-nginx:
       ## See https://www.ibm.com/support/pages/502-error-ingress-keycloak-response
-      # nginx.ingress.kubernetes.io/proxy-buffer-size: 128k
+      nginx.ingress.kubernetes.io/proxy-buffer-size: 128k
       # https://nginx.org/en/docs/http/ngx_http_core_module.html#client_body_buffer_size
       nginx.ingress.kubernetes.io/client-body-buffer-size: "1m"
       # https://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size
