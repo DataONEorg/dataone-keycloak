@@ -125,7 +125,8 @@ keycloakx:
     - "--spi-theme--static-max-age=-1"
     - "--spi-theme--cache-themes=false"
     - "--spi-theme--cache-templates=false"
-    - "--log-level=debug"
+    - "--log-level=error"
+    - "--log-level-org.keycloak.social.user_profile_dump=debug"
 
   ## Overrides the default args for the Keycloak container
   args: []
