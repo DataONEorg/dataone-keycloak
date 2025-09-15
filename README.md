@@ -23,18 +23,15 @@ Make sure you're in the correct k8s context, then:
 ```txt
 ❯ helm upgrade --install keycloakx -n keycloak -f values.yaml \
        oci://ghcr.io/dataone/charts/dataone-keycloak --version [version]
-Pulled: registry-1.docker.io/bitnamicharts/keycloak:21.4.5
-Digest: sha256:567ca7a6e52d27f82c0ff5064a77340be1f01eb0efbc2afaa055495441c0b030
-NAME: keycloak
-LAST DEPLOYED: Fri Jul  5 13:17:06 2024
+Release "keycloakx" has been upgraded. Happy Helming!
+NAME: keycloakx
+LAST DEPLOYED: Mon Sep 15 14:39:24 2025
 NAMESPACE: keycloak
 STATUS: deployed
-REVISION: 1
+REVISION: 11
 TEST SUITE: None
 NOTES:
-CHART NAME: keycloak
-CHART VERSION: 21.4.5
-APP VERSION: 24.0.5
+1. Get the application URL by running these commands:
 ```
 
 ## Adding ORCID provider
