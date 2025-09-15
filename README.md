@@ -1,6 +1,6 @@
 ## DataONE Keycloak Deployment
 
-- **Authors**: Jones, Matthew B. (ORCID);
+- **Authors**: Jones, Matthew B. (https://orcid.org/0000-0003-0077-4738);
 - **License**: [Apache 2](http://opensource.org/licenses/Apache-2.0)
 - [Package source code on GitHub](https://github.com/DataONEorg/dataone-keycloak)
 - [**Submit Bugs and feature requests**](https://github.com/DataONEorg/dataone-keycloak/issues)
