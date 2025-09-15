@@ -1,53 +1,28 @@
 ## DataONE Keycloak Deployment
 
-- **Authors**: Jones, Matthew B. (ORCID); ...
+- **Authors**: Jones, Matthew B. (ORCID);
 - **License**: [Apache 2](http://opensource.org/licenses/Apache-2.0)
 - [Package source code on GitHub](https://github.com/DataONEorg/dataone-keycloak)
 - [**Submit Bugs and feature requests**](https://github.com/DataONEorg/dataone-keycloak/issues)
 - Contact us: support@dataone.org
 - [DataONE discussions](https://github.com/DataONEorg/dataone/discussions)
 
-This is an experimental repository to track deployment of the CNCF Keycloak platform as a potential
-component within the DataONE authentication infrastructure.
+A helm chart for deploying the CNCF [Keycloak](https://www.keycloak.org/) platform as a component within the [DataONE](https://dataone.org) authentication infrastructure.
 
-Currently, we are following instructions from Bitnami for their helm chart install for Postgres. 
-Eventually, we would want to develop our own helm chart that likely depends on the 
-Bitnami Keycloak as a subchart dependency.
+Keycloak provides OAuth2 and OIDC authentication services for applications. This chart is configured to provide
+an OIDC endpoint for DataONE enabling client applications to log in and use authenticated credentials for accessing
+DataONE services and member repositories.
 
 DataONE in general is an open source, community project.  We [welcome contributions](./CONTRIBUTING.md) in many forms, including code, graphics, documentation, bug reports, testing, etc.  Use the [DataONE discussions](https://github.com/DataONEorg/dataone/discussions) to discuss these contributions with us.
 
 
-## Documentation
+## Install the dataone-keycloak helm chart
 
-Documentation is a work in progress, and can be found ...
+Make sure you're in the correct k8s context, then:
 
-
-## Info
-
-- helm pull oci://registry-1.docker.io/bitnamicharts/keycloak
-- helm install my-release oci://registry-1.docker.io/bitnamicharts/keycloak
-
-## Testing install
-
-```bash
-k8 create -f storage-pvc.yaml
-# Export three env vars below before running helm install
-helm install -n keycloak keycloak oci://registry-1.docker.io/bitnamicharts/keycloak \
-    --version 21.4.5 \
-    --set auth.adminPassword=${KEYCLOAK_ADMIN_PASSWORD} \
-    --set postgresql.postgresqlPassword=${POSTGRESQL_PASSWORD} \
-    --set serviceAccount.create=false \
-    -f dev-values.yaml
-```
-
-Output:
 ```txt
-❯ helm install -n keycloak keycloak oci://registry-1.docker.io/bitnamicharts/keycloak \
->     --version 21.4.5 \
->     --set auth.adminPassword=${KEYCLOAK_ADMIN_PASSWORD} \
->     --set postgresql.postgresqlPassword=${POSTGRESQL_PASSWORD} \
->     --set serviceAccount.create=false \
->     -f dev-values.yaml
+❯ helm upgrade --install keycloakx -n keycloak -f values.yaml \
+       oci://ghcr.io/dataone/charts/dataone-keycloak --version [version]
 Pulled: registry-1.docker.io/bitnamicharts/keycloak:21.4.5
 Digest: sha256:567ca7a6e52d27f82c0ff5064a77340be1f01eb0efbc2afaa055495441c0b030
 NAME: keycloak
@@ -60,76 +35,21 @@ NOTES:
 CHART NAME: keycloak
 CHART VERSION: 21.4.5
 APP VERSION: 24.0.5
-
-** Please be patient while the chart is being deployed **
-
-Keycloak can be accessed through the following DNS name from within your cluster:
-
-    keycloak.keycloak.svc.cluster.local (port 80)
-
-To access Keycloak from outside the cluster execute the following commands:
-
-1. Get the Keycloak URL by running these commands:
-
-    export HTTP_SERVICE_PORT=$(kubectl get --namespace keycloak -o jsonpath="{.spec.ports[?(@.name=='http')].port}" services keycloak)
-    kubectl port-forward --namespace keycloak svc/keycloak ${HTTP_SERVICE_PORT}:${HTTP_SERVICE_PORT} &
-
-    echo "http://127.0.0.1:${HTTP_SERVICE_PORT}/"
-
-2. Access Keycloak using the obtained URL.
-3. Access the Administration Console using the following credentials:
-
-  echo Username: user
-  echo Password: $(kubectl get secret --namespace keycloak keycloak -o jsonpath="{.data.admin-password}" | base64 -d)
-
-WARNING: There are "resources" sections in the chart not set. Using "resourcesPreset" is not recommended for production. For production installations, please set the following values according to your workload needs:
-  - resources
-+info https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
 ```
 
 ## Adding ORCID provider
 
-See: https://github.com/eosc-kc/keycloak-orcid
-
-```
-$ kubectl cp -n keycloak keycloak-orcid.jar keycloak-0:/opt/bitnami/keycloak/providers -c keycloak
-# alternatively download with curl
-# keycloak@keycloak-0:/opt/bitnami/keycloak/providers$ curl "https://github.com/eosc-kc/keycloak-orcid/releases/download/1.4.0/keycloak-orcid.jar" -o /opt/bitnami/keycloak/providers/keycloak-orcid.jar
-# exec into container and rebuild
-keycloak@keycloak-0:/opt/bitnami/keycloak/providers$ bash /opt/bitnami/keycloak/bin/kc.sh build
-Appending additional Java properties to JAVA_OPTS
-WARNING: The following run time options were found, but will be ignored during build time: kc.spi-admin-realm, kc.cache, kc.cache-stack, kc.db-url, kc.db-username, kc.db-password, kc.hostname, kc.hostname-strict, kc.http-enabled, kc.http-port, kc.https-port, kc.log-console-output, kc.log-level, kc.bootstrap-admin-username, kc.bootstrap-admin-password
-
-Updating the configuration and installing your custom providers, if any. Please wait.
-```
+DataONE uses [orcid.org](https://orcid.org) as an identity provider to common subject identifiers for people across the repository network for both authrntication and access control purposes. This chart installs the [EOSC keycloak-orcid](https://github.com/eosc-kc/keycloak-orcid) provider plugin to enable login via ORCID identitities. 
 
 ## Switching to Codecentric chart
 
-The Codencentric helm chart uses the stock Keycloak image and deploys it as configured. It does not install it's own database, so one must provide a datatbase instance.
+This chart depends on the Codecentric helm chart, which in turn uses the stock Keycloak image and deploys it as configured. It does not install it's own database, so one must provide a database instance and configure the chart to point at it.
 
-### Starting expermiment: use existing bitnami postgres as installed with codecentric keycloak
+## Setting up CloudNativePG postgres database
 
-I updated the Codecentric values file in `values-kcx.yaml`, including setting `tag: 26.3.2` to use Keycloak 26.3.2. 
+The helm chart creates a CloudNativePG postgres cluster with one read-write node and two read-only replica nodes.
 
-- Exec into bitnami postgres container, and using `psql -U postgres postgres` create a new `keycloak` database
-  - `CREATE DATABASE keycloak WITH OWNER = bn_keycloak ENCODING = 'UTF8' LC_COLLATE = 'en_US.UTF-8';`
-- Ensure the `keycloak-postgresql` secret is already loaded with a `password` key
-- Ensure the `keycloak` secret is already loaded with a `admin-password` key
-- Install / upgrade the codecentric chart using a values file that configures the DB parameters, as well as the ingress
-  - Example in values-kcx.yaml
-  - `helm upgrade keycloakx oci://ghcr.io/codecentric/helm-charts/keycloakx --version 7.0.1 -n keycloak --values values-kcx.yaml`
-- The keycloak instance is now deployed at the ingress (e.g., https://auth.test.dataone.org/auth)
-
-## Setting up CNPG postgres
-
-Create a Postgres cluster for keycloak:
-
-```
-❯ k8 -n keycloak apply -f postgres-cluster.yaml
-cluster.postgresql.cnpg.io/keycloak-pg created
-```
-
-After a few minutes, CNPG will spin up the postgres replicas, and you can view the status of the cluster using the `kubectl cnpg` plugin:
+After a few minutes from chart creation, CNPG will spin up the postgres replicas, and you can view the status of the cluster using the `kubectl cnpg` plugin:
 
 ```
 ❯ k8 cnpg status keycloak-pg -n keycloak
@@ -137,7 +57,7 @@ Cluster Summary
 Name                 keycloak/keycloak-pg
 System ID:           7538165093337247771
 PostgreSQL Image:    ghcr.io/cloudnative-pg/postgresql:17.5
-Primary instance:    keycloak-pg-1
+Primary instance:    keycloak-cnpg-1
 Primary start time:  2025-08-13 20:10:44 +0000 UTC (uptime 1m28s)
 Status:              Cluster in healthy state
 Instances:           3
@@ -150,29 +70,28 @@ Not configured
 
 Streaming Replication status
 Replication Slots Enabled
-Name           Sent LSN   Write LSN  Flush LSN  Replay LSN  Write Lag  Flush Lag  Replay Lag  State      Sync State  Sync Priority  Replication Slot
-----           --------   ---------  ---------  ----------  ---------  ---------  ----------  -----      ----------  -------------  ----------------
-keycloak-pg-2  0/6000060  0/6000060  0/6000060  0/6000060   00:00:00   00:00:00   00:00:00    streaming  async       0              active
-keycloak-pg-3  0/6000060  0/6000060  0/6000060  0/6000060   00:00:00   00:00:00   00:00:00    streaming  async       0              active
+Name             Sent LSN   Write LSN  Flush LSN  Replay LSN  Write Lag  Flush Lag  Replay Lag  State      Sync State  Sync Priority  Replication Slot
+----             --------   ---------  ---------  ----------  ---------  ---------  ----------  -----      ----------  -------------  ----------------
+keycloak-cnpg-2  0/6000060  0/6000060  0/6000060  0/6000060   00:00:00   00:00:00   00:00:00    streaming  async       0              active
+keycloak-cnpg-3  0/6000060  0/6000060  0/6000060  0/6000060   00:00:00   00:00:00   00:00:00    streaming  async       0              active
 
 Instances status
-Name           Current LSN  Replication role  Status  QoS         Manager Version  Node
-----           -----------  ----------------  ------  ---         ---------------  ----
-keycloak-pg-1  0/6000060    Primary           OK      BestEffort  1.27.0           k8s-dev-node-3
-keycloak-pg-2  0/6000060    Standby (async)   OK      BestEffort  1.27.0           k8s-dev-node-1
-keycloak-pg-3  0/6000060    Standby (async)   OK      BestEffort  1.27.0           k8s-dev-node-2
+Name             Current LSN  Replication role  Status  QoS         Manager Version  Node
+----             -----------  ----------------  ------  ---         ---------------  ----
+keycloak-cnpg-1  0/6000060    Primary           OK      BestEffort  1.27.0           k8s-dev-node-3
+keycloak-cnpg-2  0/6000060    Standby (async)   OK      BestEffort  1.27.0           k8s-dev-node-1
+keycloak-cnpg-3  0/6000060    Standby (async)   OK      BestEffort  1.27.0           k8s-dev-node-2
 ```
 
-Now there are three keycloak Postgres replicas up and running. THe primary `keycloak-pg-rw` should be used for read-write operations, and the other replicas (`keycloak-pg-ro`, `keycloak-pg-r`) can be used for read queries and will help scale the application. Under heavy loads, in theory we can create more replicas with `kubectl scale` to serve higher read-only query loads.
-
+Now there are three keycloak Postgres replicas up and running. THe primary `keycloak-pg-rw` should be used for read-write operations, and the other replicas (`keycloak-pg-ro`, `keycloak-pg-r`) can be used for read queries and will help scale the application. Under heavy loads, in theory we can create more replicas with `kubectl scale` to serve higher read-only query loads, but keycloak generally requires a write connection. Therefore, these replic nodes really represent hot-backups that could be promoted to the primary read-write node if needed to keep the cluster operational.
 ```
 ❯ k8 -n keycloak get services
-NAME                     TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)                    AGE
-keycloak-pg-r            ClusterIP   10.111.28.124    <none>        5432/TCP                   3m43s
-keycloak-pg-ro           ClusterIP   10.110.90.138    <none>        5432/TCP                   3m43s
-keycloak-pg-rw           ClusterIP   10.109.57.188    <none>        5432/TCP                   3m43s
-keycloakx-headless       ClusterIP   None             <none>        80/TCP                     4d23h
-keycloakx-http           ClusterIP   10.101.226.135   <none>        9000/TCP,80/TCP,8443/TCP   4d23h
+NAME                       TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)                    AGE
+keycloak-cnpg-r            ClusterIP   10.111.28.124    <none>        5432/TCP                   3m43s
+keycloak-cnpg-ro           ClusterIP   10.110.90.138    <none>        5432/TCP                   3m43s
+keycloak-cnpg-rw           ClusterIP   10.109.57.188    <none>        5432/TCP                   3m43s
+keycloakx-headless         ClusterIP   None             <none>        80/TCP                     4d23h
+keycloakx-http             ClusterIP   10.101.226.135   <none>        9000/TCP,80/TCP,8443/TCP   4d23h
 ```
 
 ## License
@@ -192,10 +111,90 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ```
 
+## Parameters
+
+### Global Properties Shared Across Sub-Charts Within This Deployment
+
+| Name                         | Description                                          | Value                     |
+| ---------------------------- | ---------------------------------------------------- | ------------------------- |
+| `global.defaultStorageClass` | Global default StorageClass for Persistent Volume(s) | `csi-cephfs-sc-ephemeral` |
+
+### Keycloak Configuration
+
+| Name                                                                                | Description                                                                      | Value                                                                                                                                                                                                                                                                                                                                                                                                |
+| ----------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `keycloakx.replicas`                                                                | The number of keycloak replicas to create (has no effect if autoscaling enabled) | `1`                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `keycloakx.serviceAccount.create`                                                   | Specifies whether a ServiceAccount should be created                             | `false`                                                                                                                                                                                                                                                                                                                                                                                              |
+| `keycloakx.extraInitContainers`                                                     | Additional init containers, e. g. for providing custom themes and providers      | `- name: providers-init
+  image: busybox
+  imagePullPolicy: IfNotPresent
+  command:
+    - sh
+  args:
+    - -c
+    - |
+      echo "Downloading providers..."
+      wget -O "/providers/keycloak-orcid-1.4.0.jar" "https://github.com/eosc-kc/keycloak-orcid/releases/download/1.4.0/keycloak-orcid.jar"
+  volumeMounts:
+    - name: providers
+      mountPath: /providers
+`                           |
+| `keycloakx.command`                                                                 | Overrides the default entrypoint of the Keycloak container                       | `["/opt/keycloak/bin/kc.sh","--verbose","start","--http-port=8080","--hostname-strict=false","--spi-events-listener-jboss-logging-success-level=info","--spi-events-listener-jboss-logging-error-level=warn","--spi-theme--static-max-age=-1","--spi-theme--cache-themes=false","--spi-theme--cache-templates=false","--log-level=error","--log-level-org.keycloak.social.user_profile_dump=debug"]` |
+| `keycloakx.extraEnv`                                                                | Additional environment variables for Keycloak                                    | `- name: KEYCLOAK_ADMIN
+  value: kcadmin
+- name: KEYCLOAK_ADMIN_PASSWORD
+  valueFrom:
+    secretKeyRef:
+      name: keycloak
+      key: admin-password
+- name: KC_PROXY
+  value: "passthrough"
+- name: JAVA_OPTS_APPEND
+  value: >-
+    -Djgroups.dns.query={{ include "keycloak.fullname" . }}-headless
+# - name: KC_LOG_LEVEL
+#   value: DEBUG
+`                                                   |
+| `keycloakx.extraVolumes`                                                            | Add additional volumes, e. g. for custom themes and providers                    | `- name: providers
+  emptyDir: {}
+- name: themes
+  persistentVolumeClaim: 
+      claimName: keycloak-themes
+`                                                                                                                                                                                                                                                                                        |
+| `keycloakx.extraVolumeMounts`                                                       | Add additional volumes mounts, e. g. for custom themes and providers             | `- name: providers
+  mountPath: /opt/keycloak/providers
+- name: themes
+  mountPath: /opt/keycloak/themes
+`                                                                                                                                                                                                                                                                                           |
+| `keycloakx.ingress.enabled`                                                         | If `true`, an Ingress is created                                                 | `true`                                                                                                                                                                                                                                                                                                                                                                                               |
+| `keycloakx.ingress.ingressClassName`                                                | The name of the Ingress Class associated with this ingress                       | `nginx`                                                                                                                                                                                                                                                                                                                                                                                              |
+| `keycloakx.ingress.servicePort`                                                     | The Service port targeted by the Ingress                                         | `http`                                                                                                                                                                                                                                                                                                                                                                                               |
+| `keycloakx.ingress.annotations.nginx.ingress.kubernetes.io/proxy-buffer-size`       | Default proxy buffer size                                                        | `128k`                                                                                                                                                                                                                                                                                                                                                                                               |
+| `keycloakx.ingress.annotations.nginx.ingress.kubernetes.io/client-body-buffer-size` | Default client bidy buffer size                                                  | `1m`                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `keycloakx.ingress.annotations.nginx.ingress.kubernetes.io/client_max_body_size`    | Maximum client body size                                                         | `10m`                                                                                                                                                                                                                                                                                                                                                                                                |
+| `keycloakx.ingress.annotations.cert-manager.io/cluster-issuer`                      | Name of the cluster cert issuer for Let's Encrypt                                | `letsencrypt-prod`                                                                                                                                                                                                                                                                                                                                                                                   |
+| `keycloakx.ingress.rules[0].host`                                                   | Ingress hostname for the keycloak service                                        | `auth.test.dataone.org`                                                                                                                                                                                                                                                                                                                                                                              |
+| `keycloakx.ingress.rules[0].paths[0].path`                                          | Ingress path for the keycloak service                                            | `{{ tpl .Values.http.relativePath $ | trimSuffix "/" }}/`                                                                                                                                                                                                                                                                                                                                            |
+| `keycloakx.ingress.rules[0].paths[0].pathType`                                      | Ingress pathType for the keycloak service                                        | `Prefix`                                                                                                                                                                                                                                                                                                                                                                                             |
+| `keycloakx.ingress.tls[0].hosts`                                                    | TLS hostname for the keycloak service                                            | `["auth.test.dataone.org"]`                                                                                                                                                                                                                                                                                                                                                                          |
+| `keycloakx.ingress.tls[0].secretName`                                               | TLS secret name for the keycloak service                                         | `ingress-nginx-tls-cert`                                                                                                                                                                                                                                                                                                                                                                             |
+| `keycloakx.database.database`                                                       | The name of the database used by the keycloak service.                           | `keycloak`                                                                                                                                                                                                                                                                                                                                                                                           |
+| `keycloakx.database.replicas`                                                       | The number of database replicas used by the keycloak service.                    | `3`                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `keycloakx.database.storageClass`                                                   | The storageClass to be used by CloudNativePG to create storage volumes.          | `csi-cephfs-sc-ephemeral`                                                                                                                                                                                                                                                                                                                                                                            |
+| `keycloakx.database.size`                                                           | The size to be used by CloudNativePG to create storage volumes.                  | `10Gi`                                                                                                                                                                                                                                                                                                                                                                                               |
+| `keycloakx.database.username`                                                       | Name of the application database owner and user for keycloak                     | `keycloak`                                                                                                                                                                                                                                                                                                                                                                                           |
+| `keycloakx.database.existingSecret`                                                 | Secret to be used for postgres password                                          | `keycloak-pg`                                                                                                                                                                                                                                                                                                                                                                                        |
+| `keycloakx.database.existingSecretKey`                                              | name of the key in the existingSecret containing the password field              | `password`                                                                                                                                                                                                                                                                                                                                                                                           |
+| `keycloakx.database.vendor`                                                         | name of the database vendor, only `postgres` supported in Keycloak now           | `postgres`                                                                                                                                                                                                                                                                                                                                                                                           |
+| `keycloakx.database.hostname`                                                       | the hostname of the database service.                                            | `keycloakx-cnpg-rw`                                                                                                                                                                                                                                                                                                                                                                                  |
+| `keycloakx.database.port`                                                           | the port used for connecting to the database                                     | `5432`                                                                                                                                                                                                                                                                                                                                                                                               |
+| `keycloakx.http.relativePath`                                                       | The path at which the ingress will respond, typically `/auth`                    | `/auth`                                                                                                                                                                                                                                                                                                                                                                                              |
+
+
 ## Acknowledgements
 Work on this package was supported by:
 
-- DataONE Network
+- [DataONE](https://dataone.org)
 - Arctic Data Center: NSF-PLR grant #2042102 to M. B. Jones, A. Budden, M. Schildhauer, and J. Dozier
 
 Additional support was provided for collaboration by the National Center for Ecological Analysis and Synthesis, a Center funded by the University of California, Santa Barbara, and the State of California.
