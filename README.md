@@ -39,7 +39,7 @@ APP VERSION: 24.0.5
 
 ## Adding ORCID provider
 
-DataONE uses [orcid.org](https://orcid.org) as an identity provider to common subject identifiers for people across the repository network for both authrntication and access control purposes. This chart installs the [EOSC keycloak-orcid](https://github.com/eosc-kc/keycloak-orcid) provider plugin to enable login via ORCID identitities. 
+DataONE uses [orcid.org](https://orcid.org) as an identity provider for common subject identifiers for people across the repository network for both authentication and access control purposes. This chart installs the [EOSC keycloak-orcid](https://github.com/eosc-kc/keycloak-orcid) provider plugin to enable login via ORCID identitities. 
 
 ## Switching to Codecentric chart
 
@@ -94,23 +94,6 @@ keycloakx-headless         ClusterIP   None             <none>        80/TCP    
 keycloakx-http             ClusterIP   10.101.226.135   <none>        9000/TCP,80/TCP,8443/TCP   4d23h
 ```
 
-## License
-```
-Copyright [2025] [Regents of the University of California]
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-```
-
 ## Parameters
 
 ### Global Properties Shared Across Sub-Charts Within This Deployment
@@ -125,47 +108,11 @@ limitations under the License.
 | ----------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `keycloakx.replicas`                                                                | The number of keycloak replicas to create (has no effect if autoscaling enabled) | `1`                                                                                                                                                                                                                                                                                                                                                                                                  |
 | `keycloakx.serviceAccount.create`                                                   | Specifies whether a ServiceAccount should be created                             | `false`                                                                                                                                                                                                                                                                                                                                                                                              |
-| `keycloakx.extraInitContainers`                                                     | Additional init containers, e. g. for providing custom themes and providers      | `- name: providers-init
-  image: busybox
-  imagePullPolicy: IfNotPresent
-  command:
-    - sh
-  args:
-    - -c
-    - |
-      echo "Downloading providers..."
-      wget -O "/providers/keycloak-orcid-1.4.0.jar" "https://github.com/eosc-kc/keycloak-orcid/releases/download/1.4.0/keycloak-orcid.jar"
-  volumeMounts:
-    - name: providers
-      mountPath: /providers
-`                           |
+| `keycloakx.extraInitContainers`                                                     | Additional init containers, e. g. for providing custom themes and providers      | `- name: providers-init `                           |
 | `keycloakx.command`                                                                 | Overrides the default entrypoint of the Keycloak container                       | `["/opt/keycloak/bin/kc.sh","--verbose","start","--http-port=8080","--hostname-strict=false","--spi-events-listener-jboss-logging-success-level=info","--spi-events-listener-jboss-logging-error-level=warn","--spi-theme--static-max-age=-1","--spi-theme--cache-themes=false","--spi-theme--cache-templates=false","--log-level=error","--log-level-org.keycloak.social.user_profile_dump=debug"]` |
-| `keycloakx.extraEnv`                                                                | Additional environment variables for Keycloak                                    | `- name: KEYCLOAK_ADMIN
-  value: kcadmin
-- name: KEYCLOAK_ADMIN_PASSWORD
-  valueFrom:
-    secretKeyRef:
-      name: keycloak
-      key: admin-password
-- name: KC_PROXY
-  value: "passthrough"
-- name: JAVA_OPTS_APPEND
-  value: >-
-    -Djgroups.dns.query={{ include "keycloak.fullname" . }}-headless
-# - name: KC_LOG_LEVEL
-#   value: DEBUG
-`                                                   |
-| `keycloakx.extraVolumes`                                                            | Add additional volumes, e. g. for custom themes and providers                    | `- name: providers
-  emptyDir: {}
-- name: themes
-  persistentVolumeClaim: 
-      claimName: keycloak-themes
-`                                                                                                                                                                                                                                                                                        |
-| `keycloakx.extraVolumeMounts`                                                       | Add additional volumes mounts, e. g. for custom themes and providers             | `- name: providers
-  mountPath: /opt/keycloak/providers
-- name: themes
-  mountPath: /opt/keycloak/themes
-`                                                                                                                                                                                                                                                                                           |
+| `keycloakx.extraEnv`                                                                | Additional environment variables for Keycloak                                    |
+| `keycloakx.extraVolumes`                                                            | Add additional volumes, e. g. for custom themes and providers                    | 
+| `keycloakx.extraVolumeMounts`                                                       | Add additional volumes mounts, e. g. for custom themes and providers             | `- name: providers`
 | `keycloakx.ingress.enabled`                                                         | If `true`, an Ingress is created                                                 | `true`                                                                                                                                                                                                                                                                                                                                                                                               |
 | `keycloakx.ingress.ingressClassName`                                                | The name of the Ingress Class associated with this ingress                       | `nginx`                                                                                                                                                                                                                                                                                                                                                                                              |
 | `keycloakx.ingress.servicePort`                                                     | The Service port targeted by the Ingress                                         | `http`                                                                                                                                                                                                                                                                                                                                                                                               |
@@ -189,6 +136,23 @@ limitations under the License.
 | `keycloakx.database.hostname`                                                       | the hostname of the database service.                                            | `keycloakx-cnpg-rw`                                                                                                                                                                                                                                                                                                                                                                                  |
 | `keycloakx.database.port`                                                           | the port used for connecting to the database                                     | `5432`                                                                                                                                                                                                                                                                                                                                                                                               |
 | `keycloakx.http.relativePath`                                                       | The path at which the ingress will respond, typically `/auth`                    | `/auth`                                                                                                                                                                                                                                                                                                                                                                                              |
+
+## License
+```
+Copyright [2025] [Regents of the University of California]
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+```
 
 
 ## Acknowledgements
