@@ -146,7 +146,7 @@ keycloakx:
     rules:
       -
         ## @param keycloakx.ingress.rules[0].host Ingress hostname for the keycloak service
-        host: auth.test.dataone.org
+        host: &hostname auth.test.dataone.org
         # host: '{{ .Release.Name }}.keycloak.example.com'
         ## Paths for the host
         paths:
@@ -159,7 +159,7 @@ keycloakx:
       - 
         ## @param keycloakx.ingress.tls[0].hosts TLS hostname for the keycloak service
         hosts:
-          - auth.test.dataone.org
+          - *hostname
         ## @param keycloakx.ingress.tls[0].secretName TLS secret name for the keycloak service
         secretName: "ingress-nginx-tls-cert"
 

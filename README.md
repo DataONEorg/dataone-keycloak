@@ -40,7 +40,7 @@ DataONE uses [orcid.org](https://orcid.org) as an identity provider for common s
 
 ## Switching to Codecentric chart
 
-This chart depends on the Codecentric helm chart, which in turn uses the stock Keycloak image and deploys it as configured. It does not install it's own database, so one must provide a database instance and configure the chart to point at it.
+This chart depends on the Codecentric helm chart, which in turn uses the stock Keycloak image and deploys it as configured. It does not install its own database, so one must provide a database instance and configure the chart to point at it.
 
 ## Setting up CloudNativePG postgres database
 
