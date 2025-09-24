@@ -232,9 +232,12 @@ keycloakx:
     port: 5432
 
   proxy:
+    ## @param keycloakx.proxy.enabled true if keycloak is installed behind a proxy like a k8s Ingress
     enabled: true
+    ## @param keycloakx.proxy.mode set to `xforwarded` if X-Forwarded` headers are set by the proxy
     mode: xforwarded
     http:
+      ## @param keycloakx.proxy.http.enabled true if keycloak is proxy uses http
       enabled: true
 
   http:
