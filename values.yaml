@@ -98,8 +98,6 @@ keycloakx:
     - name: JAVA_OPTS_APPEND
       value: >-
         -Djgroups.dns.query={{ include "keycloak.fullname" . }}-headless
-    # - name: KC_LOG_LEVEL
-    #   value: DEBUG
 
   ## @param keycloakx.extraVolumes Add additional volumes, e. g. for custom themes and providers
   ##
@@ -232,6 +230,12 @@ keycloakx:
     ## @param keycloakx.database.port the port used for connecting to the database
     ##
     port: 5432
+
+  proxy:
+    enabled: true
+    mode: xforwarded
+    http:
+      enabled: true
 
   http:
     ## @param keycloakx.http.relativePath The path at which the ingress will respond, typically `/auth`
