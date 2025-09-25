@@ -68,18 +68,10 @@ keycloakx:
   ##    - theme caching
   ##    - debug mode
   command:
-    - "/opt/keycloak/bin/kc.sh"
-    - "--verbose"
-    - "start"
-    - "--http-port=8080"
-    - "--hostname-strict=false"
-    - "--spi-events-listener-jboss-logging-success-level=info"
-    - "--spi-events-listener-jboss-logging-error-level=warn"
-    - "--spi-theme--static-max-age=-1"
-    - "--spi-theme--cache-themes=false"
-    - "--spi-theme--cache-templates=false"
-    - "--log-level=error"
-    - "--log-level-org.keycloak.social.user_profile_dump=debug"
+    - sh
+  args:
+    - -c
+    - "/opt/keycloak/bin/kc.sh build --vault=file && /opt/keycloak/bin/kc.sh --verbose start --http-port=8080 --hostname-strict=false --spi-events-listener-jboss-logging-success-level=info --spi-events-listener-jboss-logging-error-level=warn --spi-theme--static-max-age=-1 --spi-theme--cache-themes=false --spi-theme--cache-templates=false --log-level=error --log-level-org.keycloak.events=debug --log-level-org.keycloak.social.user_profile_dump=debug --log-level-org.keycloak.vault=trace --log-level-org.keycloak.services=info --vault-dir=/opt/keycloak/vault --optimized"
 
   ## @param keycloakx.extraEnv Additional environment variables for Keycloak
   ##
@@ -108,6 +100,9 @@ keycloakx:
     - name: themes
       persistentVolumeClaim: 
           claimName: keycloak-themes
+    - name: vault
+      secret:
+          secretName: kc-vault
 
   ## @param keycloakx.extraVolumeMounts Add additional volumes mounts, e. g. for custom themes and providers
   extraVolumeMounts: |
@@ -115,6 +110,8 @@ keycloakx:
       mountPath: /opt/keycloak/providers
     - name: themes
       mountPath: /opt/keycloak/themes
+    - name: vault
+      mountPath: /opt/keycloak/vault
 
   ingress:
     ## @param keycloakx.ingress.enabled If `true`, an Ingress is created
