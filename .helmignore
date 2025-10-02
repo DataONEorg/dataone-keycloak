@@ -4,3 +4,4 @@ helm
 manifest.yaml
 misc
 themes
+kctest/.venv

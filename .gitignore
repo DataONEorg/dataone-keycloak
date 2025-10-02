@@ -163,3 +163,5 @@ cython_debug/
 
 # Helm ignores
 charts/*
+kctest/.venv/
+kctest/client_secrets.json
