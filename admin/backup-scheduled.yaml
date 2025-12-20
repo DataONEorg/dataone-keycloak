@@ -1,0 +1,11 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: keycloakx-scheduled-backup
+spec:
+  cluster:
+    name: keycloakx-cnpg
+  method: volumeSnapshot
+  backupOwnerReference: self
+  schedule: '0 0 19 * * *'
+  immediate: true

@@ -1,0 +1,8 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Backup
+metadata:
+  name: keycloakx-cnpg-backup
+spec:
+  method: volumeSnapshot
+  cluster:
+    name: keycloakx-cnpg

@@ -252,27 +252,31 @@ image:
 ## @param command Overrides the default entrypoint of the kctest container
 ##
 command:
-  - python
+  - /bin/bash
+  #- python
 args:
-  #- /app/app.py
-  - -c
-  - 'import time; print("Hello from Bash!"); time.sleep(300)'
+  - /app/app.sh
+  #- -c
+  #- import time; exec('while True:\n print(time.time()); time.sleep(10)')
 
 volumeMounts:
-  - name: pythonapp
+  - name: appdir
     mountPath: /app
+  - name: keycloak-data
+    mountPath: /data
+    readOnly: false
 
 volumes:
-  - name: pythonapp
+  - name: appdir
     configMap:
         name: pythonapp
+  - name: keycloak-data
+    emptyDir: {}
 
 # This is for setting up a service 
 service:
-  # This sets the service type 
   type: ClusterIP
-  # This sets the ports
-  port: 80
+  port: 4000
 
 # This block is for setting up the ingress
 ingress:

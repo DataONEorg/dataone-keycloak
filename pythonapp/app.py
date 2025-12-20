@@ -11,23 +11,23 @@ app.config.update({
 })
 oidc = OpenIDConnect(app)
 
-@app.route('/')
+@app.route('/kctest')
 def index():
     if oidc.user_loggedin:
         user_info = oidc.user_getinfo(['email', 'profile'])
         return f"Hello, {user_info.get('email')}!"
         # return 'Welcome %s' % session["oidc_auth_profile"].get('email')
     else:
-        return 'Not logged in'
+        return 'Welcome! Please <a href="/login">login</a>.'
 
 
-@app.route('/login')
+@app.route('/kctest/login')
 @oidc.require_login
 def login():
     return 'Welcome %s' % session["oidc_auth_profile"].get('email')
 
 
-@app.route('/alt')
+@app.route('/kctest/alt')
 def alternative():
     # This uses the user instance at g.oidc_user instead
     if g.oidc_user.logged_in:

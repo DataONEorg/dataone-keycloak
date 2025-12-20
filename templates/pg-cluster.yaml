@@ -22,3 +22,7 @@ spec:
   storage:
     storageClass: {{ .Values.keycloakx.database.storageClass }}
     size: {{ .Values.keycloakx.database.size }}
+  backup:
+    volumeSnapshot:
+      className: csi-cephfsplugin-snapclass
+

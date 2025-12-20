@@ -1,0 +1,18 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: recovered-cnpg
+  namespace: keycloak
+spec:
+  instances: 3
+  bootstrap:
+    recovery:
+      backup:
+        name: keycloakx-scheduled-backup-20251106044736
+      database: keycloak
+      owner: keycloak
+      secret:
+        name: keycloak-pg
+  storage:
+    storageClass: csi-cephfs-sc-ephemeral
+    size: 10Gi
