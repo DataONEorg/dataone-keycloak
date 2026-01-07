@@ -300,7 +300,8 @@ ingress:
           pathType: Prefix
         - path: /login
           pathType: Prefix
-
+        - path: /logout
+          pathType: Prefix
   tls:
     - secretName: ingress-nginx-tls-cert
       hosts:
