@@ -198,7 +198,7 @@ keycloakx:
 
     ## @param keycloakx.database.size The size to be used by CloudNativePG to create storage volumes.
     ##
-    size: 10Gi
+    size: 100Gi
 
     ## @param keycloakx.database.username Name of the application database owner and user for keycloak
     ##
@@ -259,6 +259,10 @@ args:
   #- -c
   #- import time; exec('while True:\n print(time.time()); time.sleep(10)')
 
+env:
+  - name: FLASK_SECRET_KEY
+    value: "66b33c640bcf6b1b7704d1192c67b182394cd64284d5f1673c50ce42e120ddf6"
+
 volumeMounts:
   - name: appdir
     mountPath: /app
@@ -291,7 +295,12 @@ ingress:
     - host: api.test.dataone.org
       paths:
         - path: /kctest
-          pathType: ImplementationSpecific
+          pathType: Prefix
+        - path: /authorize
+          pathType: Prefix
+        - path: /login
+          pathType: Prefix
+
   tls:
     - secretName: ingress-nginx-tls-cert
       hosts:
