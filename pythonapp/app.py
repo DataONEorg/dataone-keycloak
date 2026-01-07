@@ -27,7 +27,7 @@ oidc = OpenIDConnect(app)
 def index():
     if oidc.user_loggedin:
         user_info = oidc.user_getinfo(['email', 'profile'])
-        return f"<h3>Hello, {user_info.get('email')}!</h3> <br> <p>Please visit the <a href='/kctest/info'>user info page</a> to see more details.</p>"
+        return f"<h3>Hello, {user_info.get('email')}!</h3> <p>Please visit the <a href='/kctest/info'>user info page</a> to see more details.</p>"
         # return 'Welcome %s' % session["oidc_auth_profile"].get('email')
     else:
         return '<h3>Welcome!</h3> Please <a href="/kctest/login">login</a>.'
@@ -36,7 +36,8 @@ def index():
 @app.route('/kctest/login')
 @oidc.require_login
 def login():
-    return 'Welcome %s' % session["oidc_auth_profile"].get('email')
+    profile = session["oidc_auth_profile"]
+    return f"<h3>Welcome {profile.get('email')}!</h3> <p>Please visit the <a href='/kctest/info'>user info page</a> to see more details.</p>"
 
 
 @app.route('/kctest/info')
