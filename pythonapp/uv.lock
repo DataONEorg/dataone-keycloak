@@ -252,6 +252,7 @@ name = "kctest"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
+    { name = "authlib" },
     { name = "flask" },
     { name = "flask-oidc" },
     { name = "pyjwt" },
@@ -260,6 +261,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
+    { name = "authlib", specifier = ">=1.6.4" },
     { name = "flask", specifier = ">=3.1.2" },
     { name = "flask-oidc", specifier = ">=2.4.0" },
     { name = "pyjwt", specifier = ">=2.10.1" },
