@@ -56,7 +56,7 @@ keycloakx:
         - -c
         - |
           echo "Downloading providers..."
-          wget -O "/providers/keycloak-orcid-1.4.0.jar" "https://github.com/eosc-kc/keycloak-orcid/releases/download/1.4.0/keycloak-orcid.jar"
+          wget -O "/providers/keycloak-orcid-1.5.0.jar" "https://github.com/eosc-kc/keycloak-orcid/releases/download/1.5.0/keycloak-orcid.jar"
       volumeMounts:
         - name: providers
           mountPath: /providers
@@ -142,7 +142,6 @@ keycloakx:
       -
         ## @param keycloakx.ingress.rules[0].host Ingress hostname for the keycloak service
         host: &hostname auth.test.dataone.org
-        # host: '{{ .Release.Name }}.keycloak.example.com'
         ## Paths for the host
         paths:
           - 
@@ -242,73 +241,3 @@ keycloakx:
     ## For backwards compatibility reasons we keycloak sets this to the value used by previous Keycloak versions.
     relativePath: "/auth"
 
-image:
-  repository: python
-  # This sets the pull policy for images.
-  pullPolicy: IfNotPresent
-  # Overrides the image tag whose default is the chart appVersion.
-  tag: "3.13"
-
-## @param command Overrides the default entrypoint of the kctest container
-##
-command:
-  - /bin/bash
-  #- python
-args:
-  - /app/app.sh
-  #- -c
-  #- import time; exec('while True:\n print(time.time()); time.sleep(10)')
-
-env:
-  - name: FLASK_SECRET_KEY
-    value: "66b33c640bcf6b1b7704d1192c67b182394cd64284d5f1673c50ce42e120ddf6"
-
-volumeMounts:
-  - name: appdir
-    mountPath: /app
-  - name: keycloak-data
-    mountPath: /data
-    readOnly: false
-
-volumes:
-  - name: appdir
-    configMap:
-        name: pythonapp
-  - name: keycloak-data
-    emptyDir: {}
-
-# This is for setting up a service 
-service:
-  type: ClusterIP
-  port: 4000
-
-# This block is for setting up the ingress
-ingress:
-  enabled: true
-  className: "nginx"
-  annotations:
-    # kubernetes.io/ingress.class: nginx
-    # kubernetes.io/tls-acme: "true"
-    ## @param ingress.annotations.cert-manager.io/cluster-issuer Name of the cluster cert issuer for Let's Encrypt
-    cert-manager.io/cluster-issuer: "letsencrypt-prod"
-  hosts:
-    - host: api.test.dataone.org
-      paths:
-        - path: /kctest
-          pathType: Prefix
-        - path: /authorize
-          pathType: Prefix
-        - path: /login
-          pathType: Prefix
-        - path: /logout
-          pathType: Prefix
-  tls:
-    - secretName: ingress-nginx-tls-cert
-      hosts:
-        - api.test.dataone.org
-
-autoscaling:
-  enabled: false
-
-serviceAccount:
-  create: false
