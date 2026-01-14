@@ -15,20 +15,30 @@ DataONE services and member repositories.
 
 DataONE in general is an open source, community project.  We [welcome contributions](./CONTRIBUTING.md) in many forms, including code, graphics, documentation, bug reports, testing, etc.  Use the [DataONE discussions](https://github.com/DataONEorg/dataone/discussions) to discuss these contributions with us.
 
+## Install pre-requisite secrets and volumes
 
-## Credentials
+Create PVCs and secrets for keycloak and CloudNativePG.
 
-### Provider credentials
+```zsh
+❯ k8 apply -n keycloak -f admin/keycloak-cnpg-secret.yaml
+secret/keycloak-pg created
+❯ k8 apply -n keycloak -f admin/keycloak-secret-prod.yaml
+secret/keycloak created
+❯ k8 apply -n keycloak -f admin/keycloak-themes-pvc.yaml
+persistentvolumeclaim/keycloak-themes created
+```
+
+## Install Provider credentials as mountable secret
 
 When keycloak is authenticating with LDAP for user federation and with providers like ORCID as IdPs, it needs authentication credentials. Keycloak provides a vault feature that supports looking up these credentials from SPI-compliant vault providers, including from plain text files that are mounted in the container. This is useful in kubernetes where the credentials can be added to secrets and then mounted in the container at a known filepath. We configure keystore to use vault credentials mounted from a secret named `kc-vault` for both:
 
 - DataONE LDAP user-federation (use ${vault.ldap} as the config key)
 - DataONE ORCID provider (use ${vault.orcid} as the config key)
 
-Within the Keycloak vault, requests for these vault secrets get mapped to requests for mounted files with the naming pattern `realm_key`, where `realm` is the Keycloak realm for the provider (typically `DataONE` for us), and `key` is the name of the provider key we used to create the secret. To deploy in our typical configuration for DataONE, you should create a secret with two keys, one named `DataONE_ldap` and one named `DataONE_orcid`. Each secret should contain the password value for that provider.  When configuring the `DataONE` realm, we then use `${vault.ldap}` to represent the LDAP password, and `${vault.orcid}` to represent the ORCID provider password. You can create the necessary secret with a command such as:
+Within the Keycloak vault, requests for these vault secrets get mapped to requests for mounted files with the naming pattern `realm_key`, where `realm` is the Keycloak realm for the provider (typically `dataone` for us), and `key` is the name of the provider key we used to create the secret. To deploy in our typical configuration for DataONE, you should create a secret with two keys, one named `dataone_ldap` and one named `dataone_orcid`. Each secret should contain the password value for that provider.  When configuring the `dataone` realm, we then use `${vault.ldap}` to represent the LDAP password, and `${vault.orcid}` to represent the ORCID provider password. You can create the necessary secret with a command such as:
 
 ```
-❯ kubectl create secret generic -n keycloak kc-vault --from-file=DataONE_ldap=./admin/ldap.txt --from-file=DataONE_orcid=./admin/orcid.txt
+❯ kubectl create secret generic -n keycloak kc-vault --from-file=dataone_ldap=./admin/ldap.txt --from-file=dataone_orcid=./admin/orcid.txt
 secret/kc-vault created
 ```
 
