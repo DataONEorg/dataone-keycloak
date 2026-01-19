@@ -24,6 +24,8 @@ Create PVCs and secrets for keycloak and CloudNativePG.
 secret/keycloak-pg created
 ❯ k8 apply -n keycloak -f admin/keycloak-secret-prod.yaml
 secret/keycloak created
+❯ k8 apply -n keycloak -f admin/kc-vault-secret-prod.yaml
+secret/kc-vault created
 ❯ k8 apply -n keycloak -f admin/keycloak-themes-pvc.yaml
 persistentvolumeclaim/keycloak-themes created
 ```
