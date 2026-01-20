@@ -22,6 +22,16 @@ global:
   ##
   defaultStorageClass: csi-cephfs-sc-ephemeral
 
+  orcid:
+    ## @param global.orcid.clientId ORCID client identifier from orcid.org
+    ##
+    ## This deployment is configured to use an ORCID identity provider as the main mechanism for
+    ## authenticating users. You will need to provide an ORCID ClientId in this value to enable
+    ## authentication to succeed. The associated ORCID Client secret is also needed, but is 
+    ## provided via a Kubernetes secret (kc-vault)
+    ##
+    clientId: PUT-your-clientid-here
+
 ## @section Keycloak Configuration
 keycloakx:
 

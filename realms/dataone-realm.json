@@ -1381,7 +1381,7 @@
       "userInfoUrl" : "https://api.sandbox.orcid.org/v3.0",
       "baseUrl" : "https://sandbox.orcid.org/oauth",
       "acceptsPromptNoneForwardFromClient" : "false",
-      "clientId" : "${vault.orcid-client}",
+      "clientId" : "{{ .Values.global.orcid.clientId }}",
       "disableUserInfo" : "false",
       "filteredByClaim" : "false",
       "syncMode" : "IMPORT",
