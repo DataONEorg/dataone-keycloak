@@ -81,7 +81,7 @@ keycloakx:
     - sh
   args:
     - -c
-    - "/opt/keycloak/bin/kc.sh build --vault=file && /opt/keycloak/bin/kc.sh --verbose start --http-port=8080 --hostname https://auth.test.dataone.org/auth --hostname-strict=false --spi-events-listener-jboss-logging-success-level=info --spi-events-listener-jboss-logging-error-level=warn --spi-theme--static-max-age=-1 --spi-theme--cache-themes=false --spi-theme--cache-templates=false --log-level=error --log-level-org.keycloak.events=debug --log-level-org.keycloak.social.user_profile_dump=debug --log-level-org.keycloak.vault=trace --log-level-org.keycloak.services=info --vault-dir=/opt/keycloak/vault --import-realm --optimized"
+    - "/opt/keycloak/bin/kc.sh build --vault=file && /opt/keycloak/bin/kc.sh --verbose start --http-port=8080 --hostname https://auth.test.dataone.org --hostname-strict=false --spi-events-listener-jboss-logging-success-level=info --spi-events-listener-jboss-logging-error-level=warn --spi-theme--static-max-age=-1 --spi-theme--cache-themes=false --spi-theme--cache-templates=false --log-level=error --log-level-org.keycloak.events=debug --log-level-org.keycloak.social.user_profile_dump=debug --log-level-org.keycloak.vault=trace --log-level-org.keycloak.services=info --vault-dir=/opt/keycloak/vault --import-realm --optimized"
 
   ## @param keycloakx.extraEnv Additional environment variables for Keycloak
   ##
@@ -171,7 +171,7 @@ keycloakx:
         secretName: "ingress-nginx-tls-cert"
 
     # TODO: This needs to be configured before production to secure the admin endpoint
-    # ingress for console only (/auth/admin)
+    # ingress for console only (/admin)
     #console:
       # If `true`, an Ingress is created for console path only
       #enabled: false
@@ -252,5 +252,5 @@ keycloakx:
   http:
     ## @param keycloakx.http.relativePath The path at which the ingress will respond, typically `/auth`
     ## For backwards compatibility reasons we keycloak sets this to the value used by previous Keycloak versions.
-    relativePath: "/auth"
+    relativePath: "/"
 
