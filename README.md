@@ -20,14 +20,16 @@ DataONE in general is an open source, community project.  We [welcome contributi
 Create PVCs and secrets for keycloak and CloudNativePG.
 
 ```zsh
-❯ k8 apply -n keycloak -f admin/keycloak-cnpg-secret.yaml
+❯ kubectl apply -n keycloak -f admin/keycloak-cnpg-secret.yaml
 secret/keycloak-pg created
-❯ k8 apply -n keycloak -f admin/keycloak-secret-prod.yaml
+❯ kubectl apply -n keycloak -f admin/keycloak-secret-prod.yaml
 secret/keycloak created
-❯ k8 apply -n keycloak -f admin/kc-vault-secret-prod.yaml
+❯ kubectl apply -n keycloak -f admin/kc-vault-secret-prod.yaml
 secret/kc-vault created
-❯ k8 apply -n keycloak -f admin/keycloak-themes-pvc.yaml
+❯ kubectl apply -n keycloak -f admin/keycloak-themes-pvc.yaml
 persistentvolumeclaim/keycloak-themes created
+❯ kubectl -n keycloak apply -f keycloak-data-pvc.yaml
+persistentvolumeclaim/keycloak-data created
 ```
 
 ## Install Provider credentials as mountable secret
@@ -77,7 +79,7 @@ The helm chart creates a CloudNativePG postgres cluster with one read-write node
 After a few minutes from chart creation, CNPG will spin up the postgres replicas, and you can view the status of the cluster using the `kubectl cnpg` plugin:
 
 ```
-❯ k8 cnpg status keycloak-pg -n keycloak
+❯ kubectl cnpg status keycloak-pg -n keycloak
 Cluster Summary
 Name                 keycloak/keycloak-pg
 System ID:           7538165093337247771
@@ -110,7 +112,7 @@ keycloak-cnpg-3  0/6000060    Standby (async)   OK      BestEffort  1.27.0      
 
 Now there are three keycloak Postgres replicas up and running. THe primary `keycloak-pg-rw` should be used for read-write operations, and the other replicas (`keycloak-pg-ro`, `keycloak-pg-r`) can be used for read queries and will help scale the application. Under heavy loads, in theory we can create more replicas with `kubectl scale` to serve higher read-only query loads, but keycloak generally requires a write connection. Therefore, these replic nodes really represent hot-backups that could be promoted to the primary read-write node if needed to keep the cluster operational.
 ```
-❯ k8 -n keycloak get services
+❯ kubectl -n keycloak get services
 NAME                       TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)                    AGE
 keycloak-cnpg-r            ClusterIP   10.111.28.124    <none>        5432/TCP                   3m43s
 keycloak-cnpg-ro           ClusterIP   10.110.90.138    <none>        5432/TCP                   3m43s
