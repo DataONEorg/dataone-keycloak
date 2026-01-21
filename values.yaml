@@ -30,7 +30,14 @@ global:
     ## authentication to succeed. The associated ORCID Client secret is also needed, but is 
     ## provided via a Kubernetes secret (kc-vault)
     ##
-    clientId: PUT-your-clientid-here
+    clientId: PUT-your-orcid-clientid-here
+
+  client:
+    ## @param global.client.clientSecret client secret for default OIDC client to be set up
+    ##
+    ## This deployment is configured to create a client OIDC endpoint using this clientSecret
+    ##
+    clientSecret: PUT-your-ogdc-client-secret-here
 
 ## @section Keycloak Configuration
 keycloakx:

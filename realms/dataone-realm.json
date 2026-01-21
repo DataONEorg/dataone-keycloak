@@ -578,7 +578,7 @@
     "enabled" : true,
     "alwaysDisplayInConsole" : false,
     "clientAuthenticatorType" : "client-secret",
-    "secret" : "${vault.ogdc}",
+    "secret" : "{{ .Values.global.client.clientSecret }}",
     "redirectUris" : [ "https://api.test.dataone.org/kctest/authorize", "http://api.test.dataone.org/kctest/authorize", "http://api.test.dataone.org/authorize", "https://api.test.dataone.org/authorize" ],
     "webOrigins" : [ "https://api.test.dataone.org" ],
     "notBefore" : 0,
