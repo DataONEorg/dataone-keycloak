@@ -1,7 +1,11 @@
+.git
 Chart.lock
 admin
 helm
 manifest.yaml
 misc
+realms
 themes
 kctest/.venv
+values-*
+velero

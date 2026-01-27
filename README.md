@@ -26,8 +26,6 @@ secret/keycloak-pg created
 secret/keycloak created
 ❯ kubectl apply -n keycloak -f admin/kc-vault-secret-prod.yaml
 secret/kc-vault created
-❯ kubectl apply -n keycloak -f admin/keycloak-themes-pvc.yaml
-persistentvolumeclaim/keycloak-themes created
 ❯ kubectl -n keycloak apply -f keycloak-data-pvc.yaml
 persistentvolumeclaim/keycloak-data created
 ```
@@ -67,6 +65,21 @@ NOTES:
 ## Adding ORCID provider
 
 DataONE uses [orcid.org](https://orcid.org) as an identity provider for common subject identifiers for people across the repository network for both authentication and access control purposes. This chart installs the [EOSC keycloak-orcid](https://github.com/eosc-kc/keycloak-orcid) provider plugin to enable login via ORCID identitities. 
+
+## Building the `keycloak-init` image
+
+This deployment depends on a `ghcr.io/dataoneorg/keycloak-init` image which is used in an init container to provisions providers, themes, and validates dependencies before the main keycloak container starts. This `keycloak-init` image is based on Alpine, and contains key configuration files that are used in keycloak, including the ORCID provisioner providing ORCID logins, and our customized `dataone` theme for keycloak. The image must be rebuilt and pushed to ghcr.io any time that changes to the ORCID provider or the dataone theme have occurred. 
+
+Multi-platform builds can be supported using `docker buildx`. First you have to create a builder targeting the patforms of choice, and then you can use it to build an image for those architectures. Here's an example showing a build for arm64 and amd64, and pushing the resulting image to GHCR (you need to be logged in first with a GITHUB PAT):
+
+```sh
+echo $GITHUB_PAT | docker login ghcr.io -u mbjones --password-stdin
+
+docker buildx create --use --platform=linux/arm64,linux/amd64 --name multi-platform-builder
+docker buildx inspect --bootstrap
+
+docker buildx build --platform linux/arm64/v8,linux/amd64 --push -t ghcr.io/dataoneorg/keycloak-init:0.1.0 .
+```
 
 ## Switching to Codecentric chart
 
