@@ -65,7 +65,7 @@ keycloakx:
   ## Currently this does so by mounting an EmptyDir volume first in the initcontainer, copying files to it, then mounting it in the target container
   extraInitContainers: |
     - name: keycloak-init
-      image: ghcr.io/dataoneorg/keycloak-init:0.1.0
+      image: ghcr.io/dataoneorg/keycloak-init:0.2.0
       imagePullPolicy: IfNotPresent
       command:
         - sh

@@ -26,8 +26,6 @@ secret/keycloak-pg created
 secret/keycloak created
 ❯ kubectl apply -n keycloak -f admin/kc-vault-secret-prod.yaml
 secret/kc-vault created
-❯ kubectl -n keycloak apply -f keycloak-data-pvc.yaml
-persistentvolumeclaim/keycloak-data created
 ```
 
 ## Install Provider credentials as mountable secret

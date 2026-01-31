@@ -1,3 +1,7 @@
+:root {
+    --pf-global--primary-color--100: var(--c-major-accent-8);
+}
+
 .login-pf body {
     background-image: url("https://www.dataone.org/uploads/hero_images/joe-pregadio-Vkqyz0hu9h0-unsplash.jpg");
 }
@@ -13,10 +17,4 @@
 
 .header--overlay-subtle {
     text-shadow: 0 0 2em var(--c-major-accent-5), 0 0 .15em var(--c-major-accent-8);
-}
-
-:root {
-    --c-major-accent-5: #16acc0;
-    --c-major-accent-8: #005c67;
-    --pf-global--primary-color--100: #005c67;
 }
