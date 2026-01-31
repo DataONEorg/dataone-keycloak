@@ -106,7 +106,7 @@
     }
   ],
   "clientScopeMappings": {
-    "ogdc": [
+    "d1-confidential": [
       {
         "clientScope": "vegbank:contributor",
         "roles": [
@@ -347,9 +347,9 @@
     },
     {
       "id": "8483d161-ff76-4eb1-9d98-5cfe424e6458",
-      "clientId": "ogdc",
-      "name": "OGDC Service",
-      "description": "DataONE OGDC client",
+      "clientId": "d1-confidential",
+      "name": "DataONE Client",
+      "description": "DataONE Client",
       "rootUrl": "https://api.test.dataone.org/",
       "adminUrl": "",
       "baseUrl": "https://api.test.dataone.org/",
