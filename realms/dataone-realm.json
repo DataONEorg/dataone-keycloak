@@ -114,6 +114,15 @@
           "clientRole": true,
           "containerId": "8483d161-ff76-4eb1-9d98-5cfe424e6458",
           "attributes": {}
+        },
+        {
+          "id": "5834097e-ed01-4c73-8510-a03e4566ef45",
+          "name": "vegbank:user",
+          "description": "",
+          "composite": false,
+          "clientRole": true,
+          "containerId": "8483d161-ff76-4eb1-9d98-5cfe424e6458",
+          "attributes": {}
         }
       ],
       "realm-management": [
@@ -446,6 +455,12 @@
         "clientScope": "vegbank:admin",
         "roles": [
           "vegbank:admin"
+        ]
+      },
+      {
+        "clientScope": "vegbank:user",
+        "roles": [
+          "vegbank:user"
         ]
       }
     ],
@@ -1424,6 +1439,19 @@
       ]
     },
     {
+      "id": "ae142bfb-6c07-415b-9631-b2ed767adbcb",
+      "name": "vegbank:user",
+      "description": "Scope for Vegbank User access",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "false",
+        "gui.order": "",
+        "consent.screen.text": "",
+        "include.in.openid.provider.metadata": "true"
+      }
+    },
+    {
       "id": "0540dce4-a14e-4a5b-aa5c-01a3e09761c2",
       "name": "acr",
       "description": "OpenID Connect scope for add acr (authentication context class reference) to the token",
@@ -2175,11 +2203,11 @@
           ]
         },
         "config": {
-          "fullSyncPeriod": [
-            "-1"
-          ],
           "pagination": [
             "false"
+          ],
+          "fullSyncPeriod": [
+            "-1"
           ],
           "connectionTrace": [
             "false"
@@ -2187,11 +2215,11 @@
           "startTls": [
             "false"
           ],
-          "usersDn": [
-            "dc=dataone,dc=org"
-          ],
           "connectionPooling": [
             "true"
+          ],
+          "usersDn": [
+            "dc=dataone,dc=org"
           ],
           "cachePolicy": [
             "DEFAULT"
@@ -2208,11 +2236,11 @@
           "usernameLDAPAttribute": [
             "uid"
           ],
-          "changedSyncPeriod": [
-            "300"
-          ],
           "bindDn": [
             "cn=admin,dc=dataone,dc=org"
+          ],
+          "changedSyncPeriod": [
+            "300"
           ],
           "bindCredential": [
             "${vault.ldap}"
