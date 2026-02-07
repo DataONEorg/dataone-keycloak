@@ -7,47 +7,50 @@
 - Contact us: support@dataone.org
 - [DataONE discussions](https://github.com/DataONEorg/dataone/discussions)
 
-A helm chart for deploying the CNCF [Keycloak](https://www.keycloak.org/) platform as a component within the [DataONE](https://dataone.org) authentication infrastructure.
 
-Keycloak provides OAuth2 and OIDC authentication services for applications. This chart is configured to provide
-an OIDC endpoint for DataONE enabling client applications to log in and use authenticated credentials for accessing
+[Keycloak](https://www.keycloak.org/) provides OAuth2 and OIDC authentication services for applications. This chart is configured to provide
+an OIDC endpoint for DataONE, enabling client applications to log in and use authenticated credentials for accessing
 DataONE services and member repositories.
 
 DataONE in general is an open source, community project.  We [welcome contributions](./CONTRIBUTING.md) in many forms, including code, graphics, documentation, bug reports, testing, etc.  Use the [DataONE discussions](https://github.com/DataONEorg/dataone/discussions) to discuss these contributions with us.
 
-## Install pre-requisite secrets and volumes
+This helm chart deploys the CNCF [Keycloak](https://www.keycloak.org/) platform as a component within the [DataONE](https://dataone.org) authentication infrastructure.  This chart depends on the [Codecentric `keycloakx` helm chart](), which in turn uses the stock Keycloak image and deploys it as configured. It does not install its own database, so one must provide a database instance and configure the chart to point at it.
 
-Create PVCs and secrets for keycloak and CloudNativePG.
+## Install pre-requisite secrets
+
+Kubernetes `secrets` are needed to configure the underlying postgres database (provided by CloudNative Postgres, CNPG, described below), as well as secrets for keycloak and the keycloak vault. Customize secrets files and create the secrets before proceeding with the subsequent install steps. Example secrets files are provided in the `admin` directory.
 
 ```zsh
-❯ kubectl apply -n keycloak -f admin/keycloak-cnpg-secret.yaml
+# CNPG secret configuring database user and password (see below)
+❯ kubectl apply -n keycloak -f admin/keycloak-cnpg-secret-prod.yaml
 secret/keycloak-pg created
+
+# Keycloak `kcadmin` user password to bootstrap cluster administration
 ❯ kubectl apply -n keycloak -f admin/keycloak-secret-prod.yaml
 secret/keycloak created
+
+# Keycloak vault passwords used in Realm configuration (see below)
 ❯ kubectl apply -n keycloak -f admin/kc-vault-secret-prod.yaml
 secret/kc-vault created
 ```
 
-## Install Provider credentials as mountable secret
+## Keycloak Vault for Realm secrets
 
 When keycloak is authenticating with LDAP for user federation and with providers like ORCID as IdPs, it needs authentication credentials. Keycloak provides a vault feature that supports looking up these credentials from SPI-compliant vault providers, including from plain text files that are mounted in the container. This is useful in kubernetes where the credentials can be added to secrets and then mounted in the container at a known filepath. We configure keystore to use vault credentials mounted from a secret named `kc-vault` for both:
 
 - DataONE LDAP user-federation (use ${vault.ldap} as the config key)
-- DataONE ORCID provider (use ${vault.orcid} as the config key)
+- DataONE ORCID provider (use ${vault.orcid-secret} as the config key)
 
-Within the Keycloak vault, requests for these vault secrets get mapped to requests for mounted files with the naming pattern `realm_key`, where `realm` is the Keycloak realm for the provider (typically `dataone` for us), and `key` is the name of the provider key we used to create the secret. To deploy in our typical configuration for DataONE, you should create a secret with two keys, one named `dataone_ldap` and one named `dataone_orcid`. Each secret should contain the password value for that provider.  When configuring the `dataone` realm, we then use `${vault.ldap}` to represent the LDAP password, and `${vault.orcid}` to represent the ORCID provider password. You can create the necessary secret with a command such as:
-
-```
-❯ kubectl create secret generic -n keycloak kc-vault --from-file=dataone_ldap=./admin/ldap.txt --from-file=dataone_orcid=./admin/orcid.txt
-secret/kc-vault created
-```
+Within the Keycloak vault, requests for these vault secrets get mapped to requests for mounted files with the naming pattern `realm_key`, where `realm` is the Keycloak realm for the provider (typically `dataone` for us), and `key` is the name of the provider key we used to create the secret. To deploy in our typical configuration for DataONE, you should create a secret with two keys, one named `dataone_ldap` and one named `dataone_orcid-secret`. Each secret should contain the password value for that provider.  When configuring the `dataone` realm, we then use `${vault.ldap}` to represent the LDAP password, and `${vault.orcid-secret}` to represent the ORCID provider password. These secrets are included in the `kc-vault` secret created in the previous section, and should be set appropriately for your installation.
 
 ## Install the dataone-keycloak helm chart
+
+Cretae a `values-overrides-{dev,prod}.yaml` file that creates the values needed for the dev or prod environment, respectively. By default, the chart `values.yaml` typicially provides exampled from the dev cluster environment. Example overrides files are provided in the admin directory.
 
 Make sure you're in the correct k8s context, then:
 
 ```txt
-❯ helm upgrade --install keycloakx -n keycloak -f values.yaml \
+❯ helm upgrade --install keycloakx -n keycloak -f values-prod-overrides.yaml \
        oci://ghcr.io/dataone/charts/dataone-keycloak --version [version]
 Release "keycloakx" has been upgraded. Happy Helming!
 NAME: keycloakx
@@ -66,9 +69,9 @@ DataONE uses [orcid.org](https://orcid.org) as an identity provider for common s
 
 ## Building the `keycloak-init` image
 
-This deployment depends on a `ghcr.io/dataoneorg/keycloak-init` image which is used in an init container to provisions providers, themes, and validates dependencies before the main keycloak container starts. This `keycloak-init` image is based on Alpine, and contains key configuration files that are used in keycloak, including the ORCID provisioner providing ORCID logins, and our customized `dataone` theme for keycloak. The image must be rebuilt and pushed to ghcr.io any time that changes to the ORCID provider or the dataone theme have occurred. 
+This deployment depends on a `ghcr.io/dataoneorg/keycloak-init` image which is used in an init container to provision providers and themes, and validates dependencies before the main keycloak container starts. This `keycloak-init` image is based on Alpine, and contains configuration files that are used in keycloak, including the ORCID provisioner providing ORCID logins, and our customized `dataone` theme for keycloak. The image must be rebuilt and pushed to ghcr.io any time that changes to the ORCID provider or the dataone theme have occurred. 
 
-Multi-platform builds can be supported using `docker buildx`. First you have to create a builder targeting the patforms of choice, and then you can use it to build an image for those architectures. Here's an example showing a build for arm64 and amd64, and pushing the resulting image to GHCR (you need to be logged in first with a GITHUB PAT):
+Multi-platform builds can be supported using `docker buildx`. First you have to create a builder targeting the patforms of choice, and then you can use it to build and publish an image for those architectures. Here's an example showing a build for arm64 and amd64, and pushing the resulting image to GHCR (you need to be logged in first with a GITHUB PAT):
 
 ```sh
 echo $GITHUB_PAT | docker login ghcr.io -u mbjones --password-stdin
@@ -79,13 +82,9 @@ docker buildx inspect --bootstrap
 docker buildx build --platform linux/arm64/v8,linux/amd64 --push -t ghcr.io/dataoneorg/keycloak-init:0.1.0 .
 ```
 
-## Switching to Codecentric chart
-
-This chart depends on the Codecentric helm chart, which in turn uses the stock Keycloak image and deploys it as configured. It does not install its own database, so one must provide a database instance and configure the chart to point at it.
-
 ## Setting up CloudNativePG postgres database
 
-The helm chart creates a CloudNativePG postgres cluster with one read-write node and two read-only replica nodes.
+The helm chart creates a CloudNativePG postgres cluster with one read-write node and two read-only replica nodes. Generally the defaults set in this chart will work fine, so long as the `keycloak-pg` secret is created as indicated in the section above.
 
 After a few minutes from chart creation, CNPG will spin up the postgres replicas, and you can view the status of the cluster using the `kubectl cnpg` plugin:
 
@@ -121,7 +120,7 @@ keycloak-cnpg-2  0/6000060    Standby (async)   OK      BestEffort  1.27.0      
 keycloak-cnpg-3  0/6000060    Standby (async)   OK      BestEffort  1.27.0           k8s-dev-node-2
 ```
 
-Now there are three keycloak Postgres replicas up and running. THe primary `keycloak-pg-rw` should be used for read-write operations, and the other replicas (`keycloak-pg-ro`, `keycloak-pg-r`) can be used for read queries and will help scale the application. Under heavy loads, in theory we can create more replicas with `kubectl scale` to serve higher read-only query loads, but keycloak generally requires a write connection. Therefore, these replic nodes really represent hot-backups that could be promoted to the primary read-write node if needed to keep the cluster operational.
+Now there are three keycloak Postgres replicas up and running. The primary `keycloak-pg-rw` should be used for read-write operations, and the other replicas (`keycloak-pg-ro`, `keycloak-pg-r`) can be used for read queries and will help scale the application. Under heavy loads, in theory we can create more replicas with `kubectl scale` to serve higher read-only query loads, but keycloak generally requires a write connection. Therefore, these replic nodes really represent hot-backups that could be promoted to the primary read-write node if needed to keep the cluster operational.
 ```
 ❯ kubectl -n keycloak get services
 NAME                       TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)                    AGE
@@ -180,7 +179,7 @@ keycloakx-http             ClusterIP   10.101.226.135   <none>        9000/TCP,8
 
 ## License
 ```
-Copyright [2025] [Regents of the University of California]
+Copyright [2025-2026] [Regents of the University of California]
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
