@@ -696,19 +696,19 @@
       "clientId": "d1-confidential",
       "name": "DataONE Client",
       "description": "DataONE Client",
-      "rootUrl": "https://api.test.dataone.org/",
+      "rootUrl": "{{ .Values.global.client.rootUrl }}",
       "adminUrl": "",
-      "baseUrl": "https://api.test.dataone.org/",
+      "baseUrl": "/",
       "surrogateAuthRequired": false,
       "enabled": true,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
       "secret": "{{ .Values.global.client.clientSecret }}",
       "redirectUris": [
-        "https://api.test.dataone.org/authorize"
+        "/authorize"
       ],
       "webOrigins": [
-        "https://api.test.dataone.org"
+        "+"
       ],
       "notBefore": 0,
       "bearerOnly": false,
@@ -1753,8 +1753,8 @@
       "linkOnly": false,
       "hideOnLogin": false,
       "config": {
-        "userInfoUrl": "https://api.sandbox.orcid.org/v3.0",
-        "baseUrl": "https://sandbox.orcid.org/oauth",
+        "userInfoUrl": "{{ .Values.global.orcid.userInfoUrl }}",
+        "baseUrl": "{{ .Values.global.orcid.baseUrl }}",
         "acceptsPromptNoneForwardFromClient": "false",
         "clientId": "{{ .Values.global.orcid.clientId }}",
         "disableUserInfo": "false",
@@ -3063,7 +3063,7 @@
     "saml.signature.algorithm": "",
     "parRequestUriLifespan": "60",
     "clientSessionMaxLifespan": "0",
-    "frontendUrl": "https://auth.test.dataone.org",
+    "frontendUrl": "{{ .Values.global.realm.frontend }}",
     "acr.loa.map": "{}",
     "adminEventsExpiration": "86400",
     "shortVerificationUri": "",

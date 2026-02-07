@@ -32,12 +32,39 @@ global:
     ##
     clientId: PUT-your-orcid-clientid-here
 
+    ## @param global.orcid.baseUrl Endpoint URL for base ORCID auth services
+    ##
+    ## You will need to provide the ORCID base endpoint URL for authentication, which differs between
+    ## the ORCID production environment and sandbox environment.
+    ## Typical production value: "https://orcid.org/oauth"
+    ##
+    baseUrl: "https://sandbox.orcid.org/oauth"
+
+    ## @param global.orcid.userInfoUrl Endpoint URL for accessing user info from ORCID
+    ##
+    ## You will need to provide the ORCID endpoint URL for user info, which differs between
+    ## the ORCID production environment and sandbox environment.
+    ## Typical production value: "https://api.orcid.org/v3.0"
+    ##
+    userInfoUrl: "https://api.sandbox.orcid.org/v3.0"
+
   client:
+    ## @param global.client.rootUrl client root URLfor default OIDC client to be set up
+    ##
+    ## All relative URLs in the client config are relative to this root
+    ##
+    rootUrl: "https://api.test.dataone.org"
+
     ## @param global.client.clientSecret client secret for default OIDC client to be set up
     ##
     ## This deployment is configured to create a client OIDC endpoint using this clientSecret
     ##
-    clientSecret: PUT-your-ogdc-client-secret-here
+    clientSecret: PUT-your-oidc-client-secret-here
+
+  realm:
+    ## @param global.realm.frontend URL of the frontend for the deployed realm
+    ##
+      frontend: https://auth.test.dataone.org
 
 ## @section Keycloak Configuration
 keycloakx:
