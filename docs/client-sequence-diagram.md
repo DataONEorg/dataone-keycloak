@@ -23,6 +23,8 @@ sequenceDiagram
     Browser->>+keycloak: GET /realms/dataone/protocol/openid-connect/auth (response_type, client_id, redirect_uri, scope, state, nonce)
     keycloak->>-Browser: 302 Redirect to ORCID login page
 
+    rect rgb(191, 223, 255)
+
     Browser->>+ORCID: GET /oauth/authorize (scope=/read-limited, state, response_type=code, client_id, redirect_uri)
     ORCID->>-Browser: 302 Redirect to keycloak
 
@@ -36,6 +38,8 @@ sequenceDiagram
 
     keycloak->>-Browser: 302 Redirect to server_app
 
+    end
+    
     Browser->>+server_app: GET /authorize (codestate, session_state, iss, code)
     server_app->>+keycloak: GET /token
     keycloak->>-server_app: access_token, refresh_token
