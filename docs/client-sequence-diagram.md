@@ -68,7 +68,7 @@ sequenceDiagram
 
 ## Exchange OAuth access token for D1Token
 
-Once we have an OIDC token, we can use that to exchaneg it for a historical DataONE token, which can be sent to any DataONE service that does not know how to use OIDC tokens. If the DataONE token is expired, we can use a valid OIDC access_token to retrieve a new DataONE token.
+Once we have an OIDC token, we can use that to exchange it for a historical DataONE token, which can be sent to any DataONE service that does not know how to use OIDC tokens. If the DataONE token is expired, we can use a valid OIDC access_token to retrieve a new DataONE token.
 
 ```mermaid
 sequenceDiagram
