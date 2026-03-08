@@ -9,8 +9,8 @@
   "refreshTokenMaxReuse": 1,
   "accessTokenLifespan": 1800,
   "accessTokenLifespanForImplicitFlow": 900,
-  "ssoSessionIdleTimeout": 64800,
-  "ssoSessionMaxLifespan": 604800,
+  "ssoSessionIdleTimeout": 86400,
+  "ssoSessionMaxLifespan": 2592000,
   "ssoSessionIdleTimeoutRememberMe": 0,
   "ssoSessionMaxLifespanRememberMe": 0,
   "offlineSessionIdleTimeout": 2592000,
@@ -135,8 +135,8 @@
             "client": {
               "realm-management": [
                 "query-users",
-                "view-users",
                 "manage-users",
+                "view-users",
                 "create-client",
                 "manage-realm",
                 "manage-clients",
@@ -146,8 +146,8 @@
                 "view-clients",
                 "view-realm",
                 "manage-authorization",
-                "view-events",
                 "impersonation",
+                "view-events",
                 "query-realms",
                 "view-identity-providers",
                 "query-clients",
@@ -746,9 +746,27 @@
         "token.response.type.bearer.lower-case": "false",
         "dpop.bound.access.tokens": "false"
       },
-      "authenticationFlowBindingOverrides": {},
+      "authenticationFlowBindingOverrides": {
+        "browser": "6097b4ae-44f6-44f9-8070-f52c6e5b441d"
+      },
       "fullScopeAllowed": false,
       "nodeReRegistrationTimeout": -1,
+      "protocolMappers": [
+        {
+          "id": "4c84174a-8b78-43d7-8fee-ada5e1a3f41d",
+          "name": "d1-confidential-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.client.audience": "d1-confidential",
+            "id.token.claim": "true",
+            "lightweight.claim": "false",
+            "access.token.claim": "true",
+            "introspection.token.claim": "true"
+          }
+        }
+      ],
       "defaultClientScopes": [
         "web-origins",
         "acr",
@@ -762,6 +780,7 @@
         "phone",
         "offline_access",
         "ogdc:workflow:execute",
+        "vegbank:user",
         "microprofile-jwt",
         "vegbank:admin"
       ]
@@ -1684,6 +1703,7 @@
     "CLIENT_REGISTER",
     "IDENTITY_PROVIDER_LINK_ACCOUNT",
     "USER_DISABLED_BY_TEMPORARY_LOCKOUT",
+    "REFRESH_TOKEN",
     "UPDATE_PASSWORD",
     "DELETE_ACCOUNT",
     "FEDERATED_IDENTITY_LINK_ERROR",
@@ -1729,6 +1749,7 @@
     "VERIFY_EMAIL_ERROR",
     "SEND_RESET_PASSWORD_ERROR",
     "CLIENT_UPDATE",
+    "REFRESH_TOKEN_ERROR",
     "IDENTITY_PROVIDER_POST_LOGIN_ERROR",
     "CUSTOM_REQUIRED_ACTION_ERROR",
     "UPDATE_TOTP_ERROR",
@@ -1844,14 +1865,14 @@
         "subComponents": {},
         "config": {
           "allowed-protocol-mapper-types": [
-            "oidc-full-name-mapper",
-            "oidc-usermodel-attribute-mapper",
             "oidc-sha256-pairwise-sub-mapper",
+            "saml-user-attribute-mapper",
+            "oidc-usermodel-attribute-mapper",
             "oidc-usermodel-property-mapper",
             "saml-user-property-mapper",
             "oidc-address-mapper",
             "saml-role-list-mapper",
-            "saml-user-attribute-mapper"
+            "oidc-full-name-mapper"
           ]
         }
       },
@@ -1883,14 +1904,14 @@
         "subComponents": {},
         "config": {
           "allowed-protocol-mapper-types": [
-            "saml-user-attribute-mapper",
-            "oidc-address-mapper",
+            "oidc-usermodel-attribute-mapper",
             "saml-user-property-mapper",
             "oidc-sha256-pairwise-sub-mapper",
-            "saml-role-list-mapper",
             "oidc-full-name-mapper",
-            "oidc-usermodel-attribute-mapper",
-            "oidc-usermodel-property-mapper"
+            "oidc-usermodel-property-mapper",
+            "oidc-address-mapper",
+            "saml-role-list-mapper",
+            "saml-user-attribute-mapper"
           ]
         }
       },
@@ -1953,10 +1974,10 @@
                 "is.mandatory.in.ldap": [
                   "true"
                 ],
-                "always.read.value.from.ldap": [
+                "read.only": [
                   "true"
                 ],
-                "read.only": [
+                "always.read.value.from.ldap": [
                   "true"
                 ],
                 "user.model.attribute": [
@@ -2028,11 +2049,11 @@
                 "is.mandatory.in.ldap": [
                   "true"
                 ],
-                "always.read.value.from.ldap": [
-                  "false"
-                ],
                 "read.only": [
                   "true"
+                ],
+                "always.read.value.from.ldap": [
+                  "false"
                 ],
                 "user.model.attribute": [
                   "username"
@@ -2048,10 +2069,10 @@
                 "ldap.attribute": [
                   "equivalentIdentity"
                 ],
-                "is.mandatory.in.ldap": [
+                "attribute.force.default": [
                   "false"
                 ],
-                "attribute.force.default": [
+                "is.mandatory.in.ldap": [
                   "false"
                 ],
                 "is.binary.attribute": [
@@ -2080,11 +2101,11 @@
                 "group.name.ldap.attribute": [
                   "cn"
                 ],
-                "preserve.group.inheritance": [
-                  "true"
-                ],
                 "membership.user.ldap.attribute": [
                   "uid"
+                ],
+                "preserve.group.inheritance": [
+                  "true"
                 ],
                 "groups.dn": [
                   "dc=dataone,dc=org"
@@ -2098,11 +2119,11 @@
                 "user.roles.retrieve.strategy": [
                   "LOAD_GROUPS_BY_MEMBER_ATTRIBUTE"
                 ],
-                "ignore.missing.groups": [
-                  "false"
-                ],
                 "membership.ldap.attribute": [
                   "uniqueMember"
+                ],
+                "ignore.missing.groups": [
+                  "false"
                 ],
                 "group.object.classes": [
                   "groupOfUniqueNames"
@@ -2110,11 +2131,11 @@
                 "memberof.ldap.attribute": [
                   "memberOf"
                 ],
-                "drop.non.existing.groups.during.sync": [
-                  "false"
-                ],
                 "groups.path": [
                   "/"
+                ],
+                "drop.non.existing.groups.during.sync": [
+                  "false"
                 ]
               }
             },
@@ -2130,11 +2151,11 @@
                 "is.mandatory.in.ldap": [
                   "false"
                 ],
-                "read.only": [
-                  "true"
-                ],
                 "always.read.value.from.ldap": [
                   "false"
+                ],
+                "read.only": [
+                  "true"
                 ],
                 "user.model.attribute": [
                   "email"
@@ -2150,19 +2171,19 @@
                 "ldap.attribute": [
                   "givenName"
                 ],
-                "is.mandatory.in.ldap": [
+                "attribute.force.default": [
                   "true"
                 ],
-                "attribute.force.default": [
+                "is.mandatory.in.ldap": [
                   "true"
                 ],
                 "is.binary.attribute": [
                   "false"
                 ],
-                "always.read.value.from.ldap": [
+                "read.only": [
                   "true"
                 ],
-                "read.only": [
+                "always.read.value.from.ldap": [
                   "true"
                 ],
                 "user.model.attribute": [
@@ -2233,17 +2254,17 @@
           "enabled": [
             "true"
           ],
-          "usernameLDAPAttribute": [
-            "uid"
-          ],
           "bindDn": [
             "cn=admin,dc=dataone,dc=org"
+          ],
+          "bindCredential": [
+            "${vault.ldap}"
           ],
           "changedSyncPeriod": [
             "300"
           ],
-          "bindCredential": [
-            "${vault.ldap}"
+          "usernameLDAPAttribute": [
+            "uid"
           ],
           "lastSync": [
             "1767908259"
@@ -2254,11 +2275,11 @@
           "uuidLDAPAttribute": [
             "entryUUID"
           ],
-          "allowKerberosAuthentication": [
-            "false"
-          ],
           "connectionUrl": [
             "ldap://cn.dataone.org"
+          ],
+          "allowKerberosAuthentication": [
+            "false"
           ],
           "syncRegistrations": [
             "true"
@@ -2645,6 +2666,195 @@
       ]
     },
     {
+      "id": "cef0c5f8-6f71-43a2-87eb-f1ff0d976e02",
+      "alias": "browser-default-orcid",
+      "description": "browser based authentication via orcid",
+      "providerId": "basic-flow",
+      "topLevel": true,
+      "builtIn": false,
+      "authenticationExecutions": [
+        {
+          "authenticator": "auth-cookie",
+          "authenticatorFlow": false,
+          "requirement": "ALTERNATIVE",
+          "priority": 10,
+          "autheticatorFlow": false,
+          "userSetupAllowed": false
+        },
+        {
+          "authenticator": "auth-spnego",
+          "authenticatorFlow": false,
+          "requirement": "DISABLED",
+          "priority": 20,
+          "autheticatorFlow": false,
+          "userSetupAllowed": false
+        },
+        {
+          "authenticatorConfig": "browser-orcid-direct",
+          "authenticator": "identity-provider-redirector",
+          "authenticatorFlow": false,
+          "requirement": "ALTERNATIVE",
+          "priority": 25,
+          "autheticatorFlow": false,
+          "userSetupAllowed": false
+        },
+        {
+          "authenticatorFlow": true,
+          "requirement": "ALTERNATIVE",
+          "priority": 30,
+          "autheticatorFlow": true,
+          "flowAlias": "browser-default-orcid forms",
+          "userSetupAllowed": false
+        }
+      ]
+    },
+    {
+      "id": "d4d181ac-8c78-48cd-a43c-de2a7d7245ba",
+      "alias": "browser-default-orcid Browser - Conditional OTP",
+      "description": "Flow to determine if the OTP is required for the authentication",
+      "providerId": "basic-flow",
+      "topLevel": false,
+      "builtIn": false,
+      "authenticationExecutions": [
+        {
+          "authenticator": "conditional-user-configured",
+          "authenticatorFlow": false,
+          "requirement": "REQUIRED",
+          "priority": 10,
+          "autheticatorFlow": false,
+          "userSetupAllowed": false
+        },
+        {
+          "authenticator": "auth-otp-form",
+          "authenticatorFlow": false,
+          "requirement": "REQUIRED",
+          "priority": 20,
+          "autheticatorFlow": false,
+          "userSetupAllowed": false
+        }
+      ]
+    },
+    {
+      "id": "f6ae6fd5-1e5a-4c29-8ea6-3ff6576016be",
+      "alias": "browser-default-orcid forms",
+      "description": "Username, password, otp and other auth forms.",
+      "providerId": "basic-flow",
+      "topLevel": false,
+      "builtIn": false,
+      "authenticationExecutions": [
+        {
+          "authenticator": "auth-username-password-form",
+          "authenticatorFlow": false,
+          "requirement": "REQUIRED",
+          "priority": 10,
+          "autheticatorFlow": false,
+          "userSetupAllowed": false
+        },
+        {
+          "authenticatorFlow": true,
+          "requirement": "CONDITIONAL",
+          "priority": 20,
+          "autheticatorFlow": true,
+          "flowAlias": "browser-default-orcid Browser - Conditional OTP",
+          "userSetupAllowed": false
+        }
+      ]
+    },
+    {
+      "id": "cfa979ae-2606-435a-8d2c-77a13e0fc2ff",
+      "alias": "browser-idp-only",
+      "description": "browser auth using only an IdP",
+      "providerId": "basic-flow",
+      "topLevel": true,
+      "builtIn": false,
+      "authenticationExecutions": [
+        {
+          "authenticator": "auth-cookie",
+          "authenticatorFlow": false,
+          "requirement": "ALTERNATIVE",
+          "priority": 10,
+          "autheticatorFlow": false,
+          "userSetupAllowed": false
+        },
+        {
+          "authenticator": "auth-spnego",
+          "authenticatorFlow": false,
+          "requirement": "DISABLED",
+          "priority": 20,
+          "autheticatorFlow": false,
+          "userSetupAllowed": false
+        },
+        {
+          "authenticator": "identity-provider-redirector",
+          "authenticatorFlow": false,
+          "requirement": "ALTERNATIVE",
+          "priority": 25,
+          "autheticatorFlow": false,
+          "userSetupAllowed": false
+        },
+        {
+          "authenticatorFlow": true,
+          "requirement": "DISABLED",
+          "priority": 30,
+          "autheticatorFlow": true,
+          "flowAlias": "browser-idp-only forms",
+          "userSetupAllowed": false
+        }
+      ]
+    },
+    {
+      "id": "9d0c38cf-90d7-4dde-a89c-25f75c9c58f5",
+      "alias": "browser-idp-only Browser - Conditional OTP",
+      "description": "Flow to determine if the OTP is required for the authentication",
+      "providerId": "basic-flow",
+      "topLevel": false,
+      "builtIn": false,
+      "authenticationExecutions": [
+        {
+          "authenticator": "conditional-user-configured",
+          "authenticatorFlow": false,
+          "requirement": "REQUIRED",
+          "priority": 10,
+          "autheticatorFlow": false,
+          "userSetupAllowed": false
+        },
+        {
+          "authenticator": "auth-otp-form",
+          "authenticatorFlow": false,
+          "requirement": "REQUIRED",
+          "priority": 20,
+          "autheticatorFlow": false,
+          "userSetupAllowed": false
+        }
+      ]
+    },
+    {
+      "id": "27331de0-0609-4372-976c-a25f763278b8",
+      "alias": "browser-idp-only forms",
+      "description": "Username, password, otp and other auth forms.",
+      "providerId": "basic-flow",
+      "topLevel": false,
+      "builtIn": false,
+      "authenticationExecutions": [
+        {
+          "authenticator": "auth-username-password-form",
+          "authenticatorFlow": false,
+          "requirement": "REQUIRED",
+          "priority": 10,
+          "autheticatorFlow": false,
+          "userSetupAllowed": false
+        },
+        {
+          "authenticatorFlow": true,
+          "requirement": "CONDITIONAL",
+          "priority": 20,
+          "autheticatorFlow": true,
+          "flowAlias": "browser-idp-only Browser - Conditional OTP",
+          "userSetupAllowed": false
+        }
+      ]
+    },
+    {
       "id": "327549b7-97c2-4580-b019-a619905e97c3",
       "alias": "clients",
       "description": "Base authentication for clients",
@@ -2915,6 +3125,13 @@
   ],
   "authenticatorConfig": [
     {
+      "id": "06c2ebb5-892c-4757-868b-e7778ad37a62",
+      "alias": "browser-orcid-direct",
+      "config": {
+        "defaultProvider": "orcid"
+      }
+    },
+    {
       "id": "4d3c9330-733e-4a2d-b18a-607f8f901cab",
       "alias": "create unique user config",
       "config": {
@@ -3070,7 +3287,7 @@
     "actionTokenGeneratedByUserLifespan.reset-credentials": "",
     "darkMode": "true"
   },
-  "keycloakVersion": "26.5.0",
+  "keycloakVersion": "26.5.3",
   "userManagedAccessAllowed": false,
   "organizationsEnabled": false,
   "verifiableCredentialsEnabled": false,
