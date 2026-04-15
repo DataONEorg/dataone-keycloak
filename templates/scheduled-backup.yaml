@@ -1,0 +1,15 @@
+# Create a custom CNPG Resource for Scheduled Backups
+# Scheduled backups are enabled via 'values.yaml'
+{{- if .Values.backup.enabled }}
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: {{ .Release.Name }}-backup
+spec:
+  cluster:
+    name: {{ .Release.Name }}-cnpg
+  method: volumeSnapshot
+  backupOwnerReference: self
+  schedule: {{ .Values.backup.schedule | quote }}
+  immediate: true
+{{- end }}

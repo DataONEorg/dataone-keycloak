@@ -165,3 +165,7 @@ cython_debug/
 charts/*
 kctest/.venv/
 kctest/client_secrets.json
+
+# Project-specific ignores
+misc
+velero

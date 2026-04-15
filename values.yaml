@@ -70,7 +70,7 @@ global:
 keycloakx:
 
   ## @param keycloakx.replicas The number of keycloak replicas to create (has no effect if autoscaling enabled)
-  replicas: 1
+  replicas: 3
 
   #image:
     # The Keycloak image repository
@@ -293,3 +293,34 @@ keycloakx:
     ## For backwards compatibility reasons we keycloak sets this to the value used by previous Keycloak versions.
     relativePath: "/"
 
+## @section Database Backups
+##
+## Add backup capability to all clusters
+## https://cloudnative-pg.io/documentation/current/backup/
+##
+backup:
+  ## @param backup.enabled If backups are enabled, configure the method with the values in `backup.*`
+  enabled: false
+  ## If enabled, configure the backup method to use k8s VolumeSnapshots as a default
+  ## https://cloudnative-pg.io/documentation/current/appendixes/backup_volumesnapshot/
+  ##
+  volumeSnapshot:
+    ## @param backup.volumeSnapshot.className VolumeSnapshotClass to be used to make backups
+    ## Find your available storage driver's
+    ##
+    className: csi-cephfsplugin-snapclass
+  ## @param backup.schedule six-term cron schedule for creating snapshots
+  ## Uses the six-term cron schedule specification, which is different from standard cron, since
+  ## it includes a seconds field as the first entry.
+  ## see: https://cloudnative-pg.io/documentation/current/backup/#cron-schedule
+  ##
+  ##   Field name   | Mandatory? | Allowed values  | Allowed special characters
+  ##   ----------   | ---------- | --------------  | --------------------------
+  ##   Seconds      | Yes        | 0-59            | * / , -
+  ##   Minutes      | Yes        | 0-59            | * / , -
+  ##   Hours        | Yes        | 0-23            | * / , -
+  ##   Day of month | Yes        | 1-31            | * / , - ?
+  ##   Month        | Yes        | 1-12 or JAN-DEC | * / , -
+  ##   Day of week  | Yes        | 0-6 or SUN-SAT  | * / , - ?
+  ##
+  schedule: "0 0 3 * * *"    # 3AM UTC Daily
