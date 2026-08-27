@@ -1,0 +1,60 @@
+{{- if .Values.backup.enabled }}
+{{- if and .Values.backup.retentionPolicy.days (gt (int (default 0 .Values.backup.retentionPolicy.days)) 0) }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ .Release.Name }}-backup-retention
+spec:
+  schedule: {{ ( .Values.backup.retentionPolicy.cleanupSchedule  | quote ) | default "0 0 * * *" }}
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: {{ .Release.Namespace }}
+          restartPolicy: OnFailure
+          containers:
+            - name: backup-retention
+              image: eclipsefdn/kubectl:latest
+              imagePullPolicy: IfNotPresent
+              env:
+                - name: NAMESPACE
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.namespace
+                - name: RETENTION_DAYS
+                  value: "{{ .Values.backup.retentionPolicy.days }}"
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  set -eu
+                  retention="${RETENTION_DAYS}"
+                  # validate numeric
+                  case "$retention" in ''|*[!0-9]*) echo "invalid retentionDays: $retention"; exit 1;; esac
+                  if [ "$retention" -le 0 ]; then
+                    echo "retentionDays <= 0 => nothing to do"; exit 0
+                  fi
+                  ns="${NAMESPACE}"
+                  echo "$(date): Checking for backups older than $retention days"
+                  kubectl get backups.postgresql.cnpg.io -n "$ns" \
+                  -o=jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.metadata.creationTimestamp}{"\n"}{end}' \
+                  | while IFS=$'\t' read -r name ts; do
+                      [ -z "$name" ] && continue
+                      # parse creation time to epoch (GNU date)
+                      creation_epoch=$(date -d "$ts" +%s)
+                      now_epoch=$(date -u +%s)
+                      retention_seconds=$(( retention * 86400 ))
+                      age=$(( now_epoch - creation_epoch ))
+                      ageDays=$((age / 86400)).$(( (age % 86400) * 10 / 86400 ))
+                      if [ "$age" -gt "$retention_seconds" ]; then
+                        echo "* * * Deleting Backup $name (age ${ageDays} days > ${retention} days)"
+                        kubectl delete backups.postgresql.cnpg.io "$name" -n "$ns" \
+                            --ignore-not-found || true
+                      else
+                        echo "Keeping Backup $name (age ${ageDays} days <= ${retention} days)"
+                      fi
+                    done
+{{- end }}
+{{- end }}
