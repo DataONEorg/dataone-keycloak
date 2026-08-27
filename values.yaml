@@ -27,7 +27,7 @@ global:
     ##
     ## This deployment is configured to use an ORCID identity provider as the main mechanism for
     ## authenticating users. You will need to provide an ORCID ClientId in this value to enable
-    ## authentication to succeed. The associated ORCID Client secret is also needed, but is 
+    ## authentication to succeed. The associated ORCID Client secret is also needed, but is
     ## provided via a Kubernetes secret (kc-vault)
     ##
     clientId: PUT-your-orcid-clientid-here
@@ -86,8 +86,8 @@ keycloakx:
     ## @param keycloakx.serviceAccount.create Specifies whether a ServiceAccount should be created
     create: false
 
-  ## @param keycloakx.extraInitContainers Additional init containers, e. g. for providing custom themes and providers
-  ##
+  ## @param keycloakx.extraInitContainers [default: see values.yaml] Additional init containers, e.g. for providing custom themes and providers
+  ## [default: see values.yaml]
   ## These are responsible for copying themes and providers to their installed locations in /opt/keycloak/{themes,providers}
   ## Currently this does so by mounting an EmptyDir volume first in the initcontainer, copying files to it, then mounting it in the target container
   extraInitContainers: |
@@ -118,12 +118,12 @@ keycloakx:
   ##    - debug mode
   command:
     - sh
-  ## @param keycloakx.args Command args override the default entrypoint of the Keycloak container
+  ## @param keycloakx.args [default: see values.yaml] Command args override the default entrypoint of the Keycloak container
   args:
     - -c
     - "/opt/keycloak/bin/kc.sh build --vault=file && /opt/keycloak/bin/kc.sh --verbose start --http-port=8080 --hostname https://auth.test.dataone.org --hostname-strict=false --spi-events-listener-jboss-logging-success-level=info --spi-events-listener-jboss-logging-error-level=warn --spi-theme--static-max-age=-1 --spi-theme--cache-themes=false --spi-theme--cache-templates=false --log-level=error --log-level-org.keycloak.events=debug --log-level-org.keycloak.social.user_profile_dump=debug --log-level-org.keycloak.vault=trace --log-level-org.keycloak.services=info --log-level-org.keycloak.protocol.oidc=trace --log-level-org.keycloak.services.resources.admin=trace --vault-dir=/opt/keycloak/vault --import-realm --optimized"
 
-  ## @param keycloakx.extraEnv Additional environment variables for Keycloak
+  ## @param keycloakx.extraEnv [default: see values.yaml] Additional environment variables for Keycloak
   ##
   ## - KEYCLOAK_ADMIN is used to create a default admin account, which can be deleted once a long-term admin account has been created
   ## - JAVA_OPTS_APPEND are necessary for startup using a k8s Ingress proxy and with replicas > 1
@@ -139,7 +139,7 @@ keycloakx:
       value: >-
         -Djgroups.dns.query={{ include "keycloak.fullname" . }}-headless
 
-  ## @param keycloakx.extraVolumes Add additional volumes, e. g. for custom themes and providers
+  ## @param keycloakx.extraVolumes [default: see values.yaml] Add additional volumes, e.g. for custom themes and providers
   ##
   ## Currently, `providers` is set up as an emptyDir which is mounted and then the ORCID provider is copied into the volume
   extraVolumes: |
@@ -154,7 +154,7 @@ keycloakx:
       secret:
           secretName: kc-vault
 
-  ## @param keycloakx.extraVolumeMounts Add additional volumes mounts, e. g. for custom themes and providers
+  ## @param keycloakx.extraVolumeMounts [default: see values.yaml] Add additional volumes mounts, e.g. for custom themes and providers
   extraVolumeMounts: |
     - name: providers
       mountPath: /opt/keycloak/providers
@@ -172,22 +172,23 @@ keycloakx:
     ingressClassName: "nginx"
     ## @param keycloakx.ingress.servicePort The Service port targeted by the Ingress
     servicePort: http
+    ## @param keycloakx.ingress.annotations [default: see values.yaml] Nginx-specific ingress annotations
     annotations:
       ## Resolve HTTP 502 error using ingress-nginx:
       ## See https://www.ibm.com/support/pages/502-error-ingress-keycloak-response
 
-      ## @param keycloakx.ingress.annotations.nginx.ingress.kubernetes.io/proxy-buffer-size Default proxy buffer size
+      ## @skip keycloakx.ingress.annotations.nginx.ingress.kubernetes.io/proxy-buffer-size Default proxy buffer size
       nginx.ingress.kubernetes.io/proxy-buffer-size: "256k"
 
-      ## @param keycloakx.ingress.annotations.nginx.ingress.kubernetes.io/client-body-buffer-size Default client bidy buffer size 
+      ## @skip keycloakx.ingress.annotations.nginx.ingress.kubernetes.io/client-body-buffer-size Default client bidy buffer size
       ## https://nginx.org/en/docs/http/ngx_http_core_module.html#client_body_buffer_size
       nginx.ingress.kubernetes.io/client-body-buffer-size: "1m"
 
-      ## @param keycloakx.ingress.annotations.nginx.ingress.kubernetes.io/client_max_body_size Maximum client body size 
+      ## @skip keycloakx.ingress.annotations.nginx.ingress.kubernetes.io/client_max_body_size Maximum client body size
       ## https://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size
       nginx.ingress.kubernetes.io/client_max_body_size: "10m"
 
-      ## @param keycloakx.ingress.annotations.cert-manager.io/cluster-issuer Name of the cluster cert issuer for Let's Encrypt
+      ## @skip keycloakx.ingress.annotations.cert-manager.io/cluster-issuer Name of the cluster cert issuer for Let's Encrypt
       cert-manager.io/cluster-issuer: "letsencrypt-prod"
 
     rules:
@@ -196,13 +197,13 @@ keycloakx:
         host: &hostname auth.test.dataone.org
         ## Paths for the host
         paths:
-          - 
+          -
             ## @param keycloakx.ingress.rules[0].paths[0].path Ingress path for the keycloak service
             path: '{{ tpl .Values.http.relativePath $ | trimSuffix "/" }}/'
             ## @param keycloakx.ingress.rules[0].paths[0].pathType Ingress pathType for the keycloak service
             pathType: Prefix
     tls:
-      - 
+      -
         ## @param keycloakx.ingress.tls[0].hosts TLS hostname for the keycloak service
         hosts:
           - *hostname
@@ -265,13 +266,13 @@ keycloakx:
     existingSecretKey: password
 
     ## @param keycloakx.database.vendor name of the database vendor, only `postgres` supported in Keycloak now
-    ## 
+    ##
     vendor: postgres
 
-    ## @param keycloakx.database.hostname the hostname of the database service. 
-    ## 
+    ## @param keycloakx.database.hostname the hostname of the database service.
+    ##
     ## For CloudNativePG, this will typically be the `rw` service in the cluster
-    ## if the database is in the same namespace as keycloakx, this can be a relative hostname, 
+    ## if the database is in the same namespace as keycloakx, this can be a relative hostname,
     ## otherwise qualify it as needed to find it in the cluster
     hostname: keycloakx-cnpg-rw
 
@@ -306,9 +307,24 @@ backup:
   ##
   volumeSnapshot:
     ## @param backup.volumeSnapshot.className VolumeSnapshotClass to be used to make backups
-    ## Find your available storage driver's
+    ## see https://cloudnative-pg.io/docs/devel/cloudnative-pg.v1#volumesnapshotconfiguration
     ##
     className: csi-cephfsplugin-snapclass
+
+    ## @param backup.volumeSnapshot.snapshotOwnerReference Set the owner of the VolumeSnapshots
+    ## Also see `backups.retentionPolicy.days'
+    ## Default is to have the cnpg Backup object to own the VolumeSnapshots, so that if we delete
+    ## the Backup, the VolumeSnapshot also gets cleaned up and is not orphaned.
+    ##
+    ## IMPORTANT - uninstalling the chart will cause the Backups to be deleted, and if
+    ## snapshotOwnerReference: backup is set, then the VolumeSnapshot will also be deleted. If this
+    ## is not desirable, patch the VolumeSnapshots you want to keep, to remove the "backup"
+    ## ownerReference.
+    ## If you know for sure you never want VolumeSnapshots to be deleted when the corresponding
+    ## Backup objects are deleted, set this to 'snapshotOwnerReference: self' (not recommended)
+    ##
+    snapshotOwnerReference: backup
+
   ## @param backup.schedule six-term cron schedule for creating snapshots
   ## Uses the six-term cron schedule specification, which is different from standard cron, since
   ## it includes a seconds field as the first entry.
@@ -324,3 +340,25 @@ backup:
   ##   Day of week  | Yes        | 0-6 or SUN-SAT  | * / , - ?
   ##
   schedule: "0 0 3 * * *"    # 3AM UTC Daily
+
+  ## Automatic cleanup settings for the scheduled backups, if enabled
+  retentionPolicy:
+    ## @param backup.retentionPolicy.days Maximum time to live (TTL) in days, for each backup
+    ##
+    ## Assigning a value of 0 indicates that the resource should never be deleted
+    ##
+    days: "60"  # default: retain for 60 days
+
+    ## @param backup.retentionPolicy.cleanupSchedule How often to find and delete expired backups
+    ## IMPORTANT!
+    ## Uses the standard five-term cron schedule specification, unlike the value for backup.schedule
+    ##
+    ##   Field name   | Mandatory? | Allowed values  | Allowed special characters
+    ##   ----------   | ---------- | --------------  | --------------------------
+    ##   Minutes      | Yes        | 0-59            | * / , -
+    ##   Hours        | Yes        | 0-23            | * / , -
+    ##   Day of month | Yes        | 1-31            | * / , - ?
+    ##   Month        | Yes        | 1-12 or JAN-DEC | * / , -
+    ##   Day of week  | Yes        | 0-6 or SUN-SAT  | * / , - ?
+    ##
+    cleanupSchedule: "0 */12 * * *"  # default every 12 hours from deploy time

@@ -22,7 +22,7 @@ spec:
   storage:
     storageClass: {{ .Values.keycloakx.database.storageClass }}
     size: {{ .Values.keycloakx.database.size }}
+  {{- with .Values.backup }}
   backup:
-    volumeSnapshot:
-      className:  {{ .Values.backup.volumeSnapshot.className }}
-
+    {{- omit . "enabled" "schedule" "retentionPolicy" | toYaml | nindent 4 }}
+  {{- end }}
