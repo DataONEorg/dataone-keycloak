@@ -301,7 +301,7 @@ keycloakx:
 ##
 backup:
   ## @param backup.enabled If backups are enabled, configure the method with the values in `backup.*`
-  enabled: false
+  enabled: true
   ## If enabled, configure the backup method to use k8s VolumeSnapshots as a default
   ## https://cloudnative-pg.io/documentation/current/appendixes/backup_volumesnapshot/
   ##
