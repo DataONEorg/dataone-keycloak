@@ -1,5 +1,5 @@
 {{- if .Values.backup.enabled }}
-{{- if and .Values.backup.retentionPolicy.days (ne .Values.backup.retentionPolicy.days "0") }}
+{{- if and .Values.backup.retentionPolicy.days (gt (int (default 0 .Values.backup.retentionPolicy.days)) 0) }}
 apiVersion: batch/v1
 kind: CronJob
 metadata:

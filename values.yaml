@@ -345,9 +345,9 @@ backup:
   retentionPolicy:
     ## @param backup.retentionPolicy.days Maximum time to live (TTL) in days, for each backup
     ##
-    ## Assigning a value of 0 indicates that the resource should never be deleted
+    ## Assigning a value of 0 or lower indicates that the resource should never be deleted
     ##
-    days: "60"  # default: retain for 60 days
+    days: 60  # default: retain for 60 days
 
     ## @param backup.retentionPolicy.cleanupSchedule How often to find and delete expired backups
     ## IMPORTANT!
