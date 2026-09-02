@@ -172,15 +172,14 @@ keycloakx:
     ingressClassName: "traefik"
     ## @param keycloakx.ingress.servicePort The Service port targeted by the Ingress
     servicePort: http
-    ## @param keycloakx.ingress.annotations [default: see values.yaml] Nginx-specific ingress annotations
+    ## @param keycloakx.ingress.annotations [default: see values.yaml] optional ingress annotations
     annotations:
       ## @skip keycloakx.ingress.annotations.cert-manager.io/cluster-issuer Name of the cluster cert issuer for Let's Encrypt
       cert-manager.io/cluster-issuer: "letsencrypt-prod"
 
     rules:
-      -
         ## @param keycloakx.ingress.rules[0].host Ingress hostname for the keycloak service
-        host: &hostname auth.test.dataone.org
+      - host: &hostname auth.test.dataone.org
         ## Paths for the host
         paths:
           -
@@ -189,37 +188,37 @@ keycloakx:
             ## @param keycloakx.ingress.rules[0].paths[0].pathType Ingress pathType for the keycloak service
             pathType: Prefix
     tls:
-      -
         ## @param keycloakx.ingress.tls[0].hosts TLS hostname for the keycloak service
-        hosts:
+      - hosts:
           - *hostname
         ## @param keycloakx.ingress.tls[0].secretName TLS secret name for the keycloak service
-        secretName: "ingress-nginx-tls-cert"
+        secretName: "ingress-tls-cert"
 
-    # TODO: This needs to be configured before production to secure the admin endpoint
-    # ingress for console only (/admin)
-    #console:
-      # If `true`, an Ingress is created for console path only
-      #enabled: false
-      # The name of Ingress Class associated with the console ingress only
-      #ingressClassName: ""
-      # Ingress annotations for console ingress only
-      # Useful to set nginx.ingress.kubernetes.io/whitelist-source-range particularly
-      #annotations: {}
-      #rules:
-      #  -
-      #    # Ingress host
-      #    host: '{{ .Release.Name }}.keycloak.example.com'
-      #    # Paths for the host
-      #    paths:
-      #      - path: '{{ tpl .Values.http.relativePath $ | trimSuffix "/" }}/admin'
-      #        pathType: Prefix
-      #
-      # Console TLS configuration
-      #tls: []
-  #      - hosts:
-  #          - console.keycloak.example.com
-  #        secretName: ""
+#    # TODO: This needs to be configured before production to secure the admin endpoint:
+#
+#    ## ingress for console only (/admin)
+#    console:
+#      ##  If `true`, an Ingress is created for console path only
+#      enabled: false
+#      ## The name of Ingress Class associated with the console ingress only
+#      ingressClassName: "traefik"
+#      ##  Ingress annotations for console ingress only
+#      ##  Useful to set allowed IPs particularly - see:
+#      ##  https://github.com/DataONEorg/k8s-cluster/blob/main/control-plane/ingress/traefik/traefik-HOWTO.md#ip-whitelist
+#      annotations: {}
+#      rules:
+#          # Ingress host
+#        - host: '{{ .Release.Name }}.keycloak.example.com'
+#          # Paths for the host
+#          paths:
+#            - path: '{{ tpl .Values.http.relativePath $ | trimSuffix "/" }}/admin'
+#              pathType: Prefix
+#
+#      ##  Console TLS configuration
+#      tls:
+#        - hosts:
+#            - console.keycloak.example.com
+#          secretName: ""
 
   database:
     ## @param keycloakx.database.database The name of the database used by the keycloak service.
