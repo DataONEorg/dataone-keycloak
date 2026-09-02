@@ -120,7 +120,7 @@ keycloak-cnpg-2  0/6000060    Standby (async)   OK      BestEffort  1.27.0      
 keycloak-cnpg-3  0/6000060    Standby (async)   OK      BestEffort  1.27.0           k8s-dev-node-2
 ```
 
-Now there are three keycloak Postgres replicas up and running. The primary `keycloak-pg-rw` should be used for read-write operations, and the other replicas (`keycloak-pg-ro`, `keycloak-pg-r`) can be used for read queries and will help scale the application. Under heavy loads, in theory we can create more replicas with `kubectl scale` to serve higher read-only query loads, but keycloak generally requires a write connection. Therefore, these replic nodes really represent hot-backups that could be promoted to the primary read-write node if needed to keep the cluster operational.
+Now there are three keycloak Postgres replicas up and running. The primary `keycloak-pg-rw` should be used for read-write operations, and the other replicas (`keycloak-pg-ro`, `keycloak-pg-r`) can be used for read queries and will help scale the application. Under heavy loads, in theory we can create more replicas with `kubectl scale` to serve higher read-only query loads, but keycloak generally requires a write connection. Therefore, these replica nodes really represent hot-backups that could be promoted to the primary read-write node if needed to keep the cluster operational.
 
 ```bash
 ❯ kubectl -n keycloak get services
@@ -135,6 +135,8 @@ keycloakx-http             ClusterIP   10.101.226.135   <none>        9000/TCP,8
 ## Database backups
 
 The chart comes with preconfigured templates supporting the use of volume snapshots to perform CloudNativePG hot backups. To configure this, you must set `backup.enabled: true` and be sure to set the `backup.volumeSnapshot.className` and `backup.schedule` to reasonable values for your cluster. Once this has been created, a `ScheduledBackup` will be created, generating one or more CNPG `Backup` objects with their associated snapshot at the designated time.
+
+By default, the backups will be retained for the number of days defined in values.yaml as: `backup.retentionPolicy.days`, after which the backups and their underlying volumeSnapshots will be deleted. (This automatic cleanup is recommended, but can be be controlled via the `backup.volumeSnapshot.snapshotOwnerReference` parameter - see decumentation in values.yaml).
 
 ## Parameters
 
@@ -163,14 +165,14 @@ The chart comes with preconfigured templates supporting the use of volume snapsh
 | `keycloakx.extraVolumes`                       | Add additional volumes, e.g. for custom themes and providers                     | `see values.yaml`                                         |
 | `keycloakx.extraVolumeMounts`                  | Add additional volumes mounts, e.g. for custom themes and providers              | `see values.yaml`                                         |
 | `keycloakx.ingress.enabled`                    | If `true`, an Ingress is created                                                 | `true`                                                    |
-| `keycloakx.ingress.ingressClassName`           | The name of the Ingress Class associated with this ingress                       | `nginx`                                                   |
+| `keycloakx.ingress.ingressClassName`           | The name of the Ingress Class associated with this ingress                       | `traefik`                                                 |
 | `keycloakx.ingress.servicePort`                | The Service port targeted by the Ingress                                         | `http`                                                    |
-| `keycloakx.ingress.annotations`                | Nginx-specific ingress annotations                                               | `see values.yaml`                                         |
+| `keycloakx.ingress.annotations`                | optional ingress annotations                                                     | `see values.yaml`                                         |
 | `keycloakx.ingress.rules[0].host`              | Ingress hostname for the keycloak service                                        | `auth.test.dataone.org`                                   |
 | `keycloakx.ingress.rules[0].paths[0].path`     | Ingress path for the keycloak service                                            | `{{ tpl .Values.http.relativePath $ | trimSuffix "/" }}/` |
 | `keycloakx.ingress.rules[0].paths[0].pathType` | Ingress pathType for the keycloak service                                        | `Prefix`                                                  |
 | `keycloakx.ingress.tls[0].hosts`               | TLS hostname for the keycloak service                                            | `["auth.test.dataone.org"]`                               |
-| `keycloakx.ingress.tls[0].secretName`          | TLS secret name for the keycloak service                                         | `ingress-nginx-tls-cert`                                  |
+| `keycloakx.ingress.tls[0].secretName`          | TLS secret name for the keycloak service                                         | `ingress-tls-cert`                                        |
 | `keycloakx.database.database`                  | The name of the database used by the keycloak service.                           | `keycloak`                                                |
 | `keycloakx.database.replicas`                  | The number of database replicas used by the keycloak service.                    | `3`                                                       |
 | `keycloakx.database.storageClass`              | The storageClass to be used by CloudNativePG to create storage volumes.          | `csi-cephfs-sc-ephemeral`                                 |
@@ -190,7 +192,7 @@ The chart comes with preconfigured templates supporting the use of volume snapsh
 
 | Name                                           | Description                                                                | Value                        |
 | ---------------------------------------------- | -------------------------------------------------------------------------- | ---------------------------- |
-| `backup.enabled`                               | If backups are enabled, configure the method with the values in `backup.*` | `false`                      |
+| `backup.enabled`                               | If backups are enabled, configure the method with the values in `backup.*` | `true`                       |
 | `backup.volumeSnapshot.className`              | VolumeSnapshotClass to be used to make backups                             | `csi-cephfsplugin-snapclass` |
 | `backup.volumeSnapshot.snapshotOwnerReference` | Set the owner of the VolumeSnapshots                                       | `backup`                     |
 | `backup.schedule`                              | six-term cron schedule for creating snapshots                              | `0 0 3 * * *`                |
