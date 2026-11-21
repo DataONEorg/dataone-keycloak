@@ -20,21 +20,8 @@ Notes:
 {{- $cr := $db.collationRefresh | default dict }}
 {{- if $cr.enabled }}
 {{- $clusterName := printf "%s-cnpg" .Release.Name }}
-{{- $img := $db.image | default dict }}
-{{- $cat := $img.catalog | default dict }}
-
 {{- /* Image the cluster will run after this upgrade */ -}}
-{{- $desired := "" }}
-{{- if $img.name }}
-  {{- $desired = $img.name }}
-{{- else if $cat.name }}
-  {{- $catKind := $cat.kind | default "ClusterImageCatalog" }}
-  {{- $catNs := ternary "" .Release.Namespace (eq $catKind "ClusterImageCatalog") }}
-  {{- $catalog := lookup "postgresql.cnpg.io/v1" $catKind $catNs $cat.name }}
-  {{- range (dig "spec" "images" list $catalog) }}
-    {{- if eq (int .major) (int $cat.major) }}{{ $desired = .image }}{{ end }}
-  {{- end }}
-{{- end }}
+{{- $desired := dig "name" "" ($db.image | default dict) }}
 
 {{- /* Image the cluster is running now */ -}}
 {{- $cluster := lookup "postgresql.cnpg.io/v1" "Cluster" .Release.Namespace $clusterName }}
