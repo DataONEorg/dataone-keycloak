@@ -1,0 +1,136 @@
+{{- /*
+One-shot collation refresh Job.
+
+Rendered only when an upgrade changes the PostgreSQL image (or when collationRefresh.force is
+set). It runs on the *target* image, waits until the primary reports the same PostgreSQL build
+as the Job's own binaries (i.e. CNPG has finished switching the primary over), then, if the
+application database's recorded collation version no longer matches the image's ICU library,
+runs REINDEX DATABASE CONCURRENTLY and ALTER DATABASE ... REFRESH COLLATION VERSION.
+If the versions already match (the usual case for minor upgrades on the same OS), it exits.
+
+Notes:
+- Uses `lookup`, which returns nothing under `helm template` or a client-side dry run, so the
+  Job is not rendered there unless `force` is set.
+- `helm.sh/resource-policy: keep` stops a later upgrade (which no longer renders the Job) from
+  deleting it mid-run or before its logs can be read; ttlSecondsAfterFinished cleans it up.
+- Uses the application owner's credentials only, so it refreshes the application database
+  and not `postgres` / `template1`.
+*/ -}}
+{{- $db := .Values.keycloakx.database }}
+{{- $cr := $db.collationRefresh | default dict }}
+{{- if $cr.enabled }}
+{{- $clusterName := printf "%s-cnpg" .Release.Name }}
+{{- $img := $db.image | default dict }}
+{{- $cat := $img.catalog | default dict }}
+
+{{- /* Image the cluster will run after this upgrade */ -}}
+{{- $desired := "" }}
+{{- if $img.name }}
+  {{- $desired = $img.name }}
+{{- else if $cat.name }}
+  {{- $catKind := $cat.kind | default "ClusterImageCatalog" }}
+  {{- $catNs := ternary "" .Release.Namespace (eq $catKind "ClusterImageCatalog") }}
+  {{- $catalog := lookup "postgresql.cnpg.io/v1" $catKind $catNs $cat.name }}
+  {{- range (dig "spec" "images" list $catalog) }}
+    {{- if eq (int .major) (int $cat.major) }}{{ $desired = .image }}{{ end }}
+  {{- end }}
+{{- end }}
+
+{{- /* Image the cluster is running now */ -}}
+{{- $cluster := lookup "postgresql.cnpg.io/v1" "Cluster" .Release.Namespace $clusterName }}
+{{- $current := dig "status" "image" (dig "spec" "imageName" "" $cluster) $cluster }}
+
+{{- if and $desired (or $cr.force (and $current (ne $current $desired))) }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  {{- /* Unique per target image (and per revision when forced), since a Job's pod spec is immutable */}}
+  name: {{ printf "%s-collation-%s%s" $clusterName ($desired | sha256sum | trunc 8) (ternary (printf "-r%d" .Release.Revision) "" (not (not $cr.force))) }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ $clusterName }}-collation-refresh
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  annotations:
+    helm.sh/resource-policy: keep
+    dataone.org/from-image: {{ $current | quote }}
+    dataone.org/to-image: {{ $desired | quote }}
+spec:
+  backoffLimit: 2
+  activeDeadlineSeconds: {{ $cr.timeoutSeconds | default 3600 }}
+  ttlSecondsAfterFinished: {{ $cr.ttlSecondsAfterFinished | default 604800 }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ $clusterName }}-collation-refresh
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: collation-refresh
+          image: {{ $desired | quote }}
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: PGHOST
+              value: {{ printf "%s-rw" $clusterName | quote }}
+            - name: PGPORT
+              value: "5432"
+            - name: PGDATABASE
+              value: {{ $db.database | quote }}
+            - name: PGSSLMODE
+              value: require
+            - name: PGCONNECT_TIMEOUT
+              value: "5"
+            - name: PGUSER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $db.existingSecret }}
+                  key: username
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $db.existingSecret }}
+                  key: {{ $db.existingSecretKey | default "password" }}
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -eu
+              log() { echo "$(date -u +%FT%TZ) $*"; }
+              q() { psql -X -v ON_ERROR_STOP=1 -At "$@"; }
+
+              # e.g. "17.12 (Debian 17.12-1.pgdg13+1)" - the build this image provides
+              want=$(postgres --version | sed 's/^postgres (PostgreSQL) //')
+              log "waiting for primary at $PGHOST to run PostgreSQL $want"
+
+              # Wait for CNPG to finish switching the primary to this image. Connection
+              # errors are expected while the switchover happens.
+              while :; do
+                have=$(q -c 'SELECT version()' 2>/dev/null || true)
+                case "$have" in "PostgreSQL $want "*) break ;; esac
+                log "primary reports: ${have:-<unreachable>}"
+                sleep 15
+              done
+              log "primary is on the target build"
+
+              recorded=$(q -c "SELECT coalesce(datcollversion, '') FROM pg_database WHERE datname = current_database()")
+              actual=$(q -c "SELECT coalesce(pg_database_collation_actual_version(oid), '') FROM pg_database WHERE datname = current_database()")
+              log "database $PGDATABASE: recorded collation version '$recorded', library version '$actual'"
+              if [ "$recorded" = "$actual" ]; then
+                log "collation versions match; nothing to do"
+                exit 0
+              fi
+
+              log "reindexing $PGDATABASE"
+              q -c 'REINDEX DATABASE CONCURRENTLY'
+
+              invalid=$(q -c 'SELECT count(*) FROM pg_index WHERE NOT indisvalid')
+              if [ "$invalid" != "0" ]; then
+                log "ERROR: $invalid invalid index(es) after REINDEX; collation version NOT refreshed"
+                q -c "SELECT indexrelid::regclass FROM pg_index WHERE NOT indisvalid"
+                exit 1
+              fi
+
+              echo 'ALTER DATABASE :"PGDATABASE" REFRESH COLLATION VERSION' | q -v PGDATABASE="$PGDATABASE"
+              log "done: collation version is now $(q -c "SELECT datcollversion FROM pg_database WHERE datname = current_database()")"
+{{- end }}
+{{- end }}

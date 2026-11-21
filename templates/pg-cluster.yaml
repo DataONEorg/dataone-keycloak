@@ -8,6 +8,26 @@ metadata:
   namespace: {{ .Release.Namespace }}
 spec:
   instances: {{ .Values.keycloakx.database.replicas }}
+  {{- $img := .Values.keycloakx.database.image | default dict }}
+  {{- $cat := $img.catalog | default dict }}
+  {{- if and $img.name $cat.name }}
+    {{- fail "Set only one of keycloakx.database.image.name or keycloakx.database.image.catalog" }}
+  {{- else if $img.name }}
+  imageName: {{ $img.name | quote }}
+  {{- else if $cat.name }}
+  imageCatalogRef:
+    apiGroup: postgresql.cnpg.io
+    kind: {{ $cat.kind | default "ClusterImageCatalog" }}
+    name: {{ $cat.name }}
+    major: {{ required "keycloakx.database.image.catalog.major is required" $cat.major }}
+  {{- else }}
+    {{- fail "keycloakx.database.image.name or keycloakx.database.image.catalog must be set, so the operator's default image is never used" }}
+  {{- end }}
+  primaryUpdateStrategy: {{ .Values.keycloakx.database.primaryUpdateStrategy | default "unsupervised" }}
+  primaryUpdateMethod: {{ .Values.keycloakx.database.primaryUpdateMethod | default "switchover" }}
+  {{- with .Values.keycloakx.database.smartShutdownTimeout }}
+  smartShutdownTimeout: {{ . }}
+  {{- end }}
   bootstrap:
     initdb:
       database: {{ .Values.keycloakx.database.database }}

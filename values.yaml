@@ -138,6 +138,7 @@ keycloakx:
     - name: JAVA_OPTS_APPEND
       value: >-
         -Djgroups.dns.query={{ include "keycloak.fullname" . }}-headless
+        -XX:-UseBASE64Intrinsics
 
   ## @param keycloakx.extraVolumes [default: see values.yaml] Add additional volumes, e.g. for custom themes and providers
   ##
@@ -224,6 +225,50 @@ keycloakx:
     ## @param keycloakx.database.database The name of the database used by the keycloak service.
     ##
     database: keycloak
+
+    image:
+      ## @param keycloakx.database.image.name Full image reference, e.g. ghcr.io/cloudnative-pg/postgresql:17.12-standard-bookworm@sha256:... Set exactly one of image.name or image.catalog.
+      name: "ghcr.io/cloudnative-pg/postgresql:17.5"
+      ## @param keycloakx.database.image.catalog Full catalog reference, e.g. {kind: ClusterImageCatalog, name: dataone-pg-bookworm-stable, major: 17}. Set exactly one of image.name or image.catalog.
+      catalog: {}
+
+    ## Settings that control how CNPG rolls out a new image (for example a minor version
+    ## upgrade such as 17.5 -> 17.6). CNPG always updates the replicas first, one at a time,
+    ## and the primary last. These settings decide what happens to the primary.
+    ## See https://cloudnative-pg.io/documentation/current/installation_upgrade/
+    ## and https://cloudnative-pg.io/documentation/current/instance_manager/
+    ##
+    ## @param keycloakx.database.primaryUpdateStrategy `unsupervised` (the default): the operator updates the primary automatically after the replicas. `supervised`: the operator updates the replicas, then waits for an admin to finish the primary with `kubectl cnpg promote` or `kubectl cnpg restart`.
+    ##
+    primaryUpdateStrategy: unsupervised
+
+    ## @param keycloakx.database.primaryUpdateMethod `switchover`: promote an already-updated replica and restart the old primary as a replica, so the database is unavailable for only a few seconds. `restart` (CNPG default): restart the primary in place, so there is no primary until it comes back.
+    ##
+    primaryUpdateMethod: switchover
+
+    ## @param keycloakx.database.smartShutdownTimeout Seconds Postgres waits in "smart" shutdown (no new connections, existing ones may finish) before CNPG switches to a "fast" shutdown. Keycloak's connection pool never closes its connections on its own, so a smart shutdown always waits the full timeout. 30s is plenty for in-flight transactions. CNPG default: 180.
+    ##
+    smartShutdownTimeout: 30
+
+    ## When an upgrade changes the PostgreSQL image, Helm creates a one-shot Job that waits for
+    ## CNPG to finish moving the primary onto the new image. If the application database's
+    ## collation version no longer matches the image's ICU library (this happens when the image's
+    ## Debian release changes, e.g. bullseye -> trixie), it runs `REINDEX DATABASE CONCURRENTLY`
+    ## and `ALTER DATABASE ... REFRESH COLLATION VERSION`. Otherwise it exits without changes.
+    ## The Job runs on the target PostgreSQL image and connects with the application credentials
+    ## from `existingSecret`. It is not created on install, under `helm template`, or by a
+    ## client-side dry run, because Helm's `lookup` can't read the live Cluster there.
+    ## Check it with: kubectl -n <ns> logs -l app.kubernetes.io/name=<release>-cnpg-collation-refresh
+    ##
+    collationRefresh:
+      ## @param keycloakx.database.collationRefresh.enabled Create the collation refresh Job when the PostgreSQL image changes
+      enabled: true
+      ## @param keycloakx.database.collationRefresh.force Create the Job even if the image is unchanged, e.g. to retry a failed run
+      force: false
+      ## @param keycloakx.database.collationRefresh.timeoutSeconds Maximum time the Job may run, including waiting for the rollout
+      timeoutSeconds: 3600
+      ## @param keycloakx.database.collationRefresh.ttlSecondsAfterFinished How long the finished Job and its logs are kept
+      ttlSecondsAfterFinished: 604800
 
     ## @param keycloakx.database.replicas The number of database replicas used by the keycloak service.
     ##
