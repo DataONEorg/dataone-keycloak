@@ -169,3 +169,8 @@ kctest/client_secrets.json
 # Project-specific ignores
 misc
 velero
+admin/k*secret*.yaml
+admin/orcid-credentials.properties
+admin/realm-backups/
+values-*-overrides.yaml
+values-prebuilt.yaml
