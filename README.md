@@ -22,7 +22,7 @@ Kubernetes `secrets` are needed to configure the underlying postgres database (p
 
 ```zsh
 # CNPG secret configuring database user and password (see below)
-❯ kubectl apply -n keycloak -f admin/keycloak-cnpg-secret-prod.yaml
+❯ kubectl apply -n keycloak -f admin/keycloakx-cnpg-secret-prod.yaml
 secret/keycloak-pg created
 
 # Keycloak `kcadmin` user password to bootstrap cluster administration
@@ -84,17 +84,31 @@ docker buildx build --platform linux/arm64/v8,linux/amd64 --push -t ghcr.io/data
 
 ## Setting up CloudNativePG postgres database
 
-The helm chart creates a CloudNativePG postgres cluster with one read-write node and two read-only replica nodes. Generally the defaults set in this chart will work fine, so long as the `keycloak-pg` secret is created as indicated in the section above.
+The helm chart creates a CloudNativePG postgres cluster (`keycloakx-cnpg`) with one read-write node and two read-only replicas. The defaults generally work fine, as long as the `keycloak-pg` secret is created as described above. The key value is `keycloakx.database.image.name`, the full CNPG postgres image reference, which defaults to `ghcr.io/cloudnative-pg/postgresql:17.12-standard-trixie`. Prefer a dated tag or `@sha256:` digest. Image catalogs (`image.catalog`) are not supported.
+
+**Minor upgrades** (e.g., 17.5 → 17.12): change `image.name` and run `helm upgrade`. CNPG updates the replicas first, then switches the primary over to an updated replica (`primaryUpdateMethod: switchover`). Expect a few seconds of DB unavailability and a few Keycloak connection errors. When the image changes, the chart also runs a one-shot `keycloakx-cnpg-collation-<hash>` Job. If the OS collation library changed, it reindexes the Keycloak database and refreshes its collation version. Check it with `kubectl logs job/keycloakx-cnpg-collation-<hash> -n keycloak`. Retry with `collationRefresh.force=true`.
+
+**Before upgrading prod:** take an on-demand backup (`admin/backup-ondemand.yaml`).
+
+**After an OS-changing image** (e.g., the legacy bare `17.x` tags are Debian bullseye; `-trixie` is a newer Debian release): once the Job finishes, refresh the system databases, which the Job can't do without superuser credentials:
+
+```bash
+kubectl cnpg psql keycloakx-cnpg -n keycloak -- \
+  -c 'ALTER DATABASE postgres REFRESH COLLATION VERSION' \
+  -c 'ALTER DATABASE template1 REFRESH COLLATION VERSION'
+```
+
+**Major upgrades** (e.g., 17 → 18) can't be done in place by this chart. Don't change the major version.
 
 After a few minutes from chart creation, CNPG will spin up the postgres replicas, and you can view the status of the cluster using the `kubectl cnpg` plugin:
 
 ```bash
-❯ kubectl cnpg status keycloak-pg -n keycloak
+❯ kubectl cnpg status keycloakx-cnpg -n keycloak
 Cluster Summary
-Name                 keycloak/keycloak-pg
+Name                 keycloak/keycloakx-cnpg
 System ID:           7538165093337247771
-PostgreSQL Image:    ghcr.io/cloudnative-pg/postgresql:17.5
-Primary instance:    keycloak-cnpg-1
+PostgreSQL Image:    ghcr.io/cloudnative-pg/postgresql:17.12-standard-trixie
+Primary instance:    keycloakx-cnpg-1
 Primary start time:  2025-08-13 20:10:44 +0000 UTC (uptime 1m28s)
 Status:              Cluster in healthy state
 Instances:           3
@@ -109,25 +123,25 @@ Streaming Replication status
 Replication Slots Enabled
 Name             Sent LSN   Write LSN  Flush LSN  Replay LSN  Write Lag  Flush Lag  Replay Lag  State      Sync State  Sync Priority  Replication Slot
 ----             --------   ---------  ---------  ----------  ---------  ---------  ----------  -----      ----------  -------------  ----------------
-keycloak-cnpg-2  0/6000060  0/6000060  0/6000060  0/6000060   00:00:00   00:00:00   00:00:00    streaming  async       0              active
-keycloak-cnpg-3  0/6000060  0/6000060  0/6000060  0/6000060   00:00:00   00:00:00   00:00:00    streaming  async       0              active
+keycloakx-cnpg-2  0/6000060  0/6000060  0/6000060  0/6000060   00:00:00   00:00:00   00:00:00    streaming  async       0              active
+keycloakx-cnpg-3  0/6000060  0/6000060  0/6000060  0/6000060   00:00:00   00:00:00   00:00:00    streaming  async       0              active
 
 Instances status
 Name             Current LSN  Replication role  Status  QoS         Manager Version  Node
 ----             -----------  ----------------  ------  ---         ---------------  ----
-keycloak-cnpg-1  0/6000060    Primary           OK      BestEffort  1.27.0           k8s-dev-node-3
-keycloak-cnpg-2  0/6000060    Standby (async)   OK      BestEffort  1.27.0           k8s-dev-node-1
-keycloak-cnpg-3  0/6000060    Standby (async)   OK      BestEffort  1.27.0           k8s-dev-node-2
+keycloakx-cnpg-1  0/6000060    Primary           OK      BestEffort  1.27.0           k8s-dev-node-3
+keycloakx-cnpg-2  0/6000060    Standby (async)   OK      BestEffort  1.27.0           k8s-dev-node-1
+keycloakx-cnpg-3  0/6000060    Standby (async)   OK      BestEffort  1.27.0           k8s-dev-node-2
 ```
 
-Now there are three keycloak Postgres replicas up and running. The primary `keycloak-pg-rw` should be used for read-write operations, and the other replicas (`keycloak-pg-ro`, `keycloak-pg-r`) can be used for read queries and will help scale the application. Under heavy loads, in theory we can create more replicas with `kubectl scale` to serve higher read-only query loads, but keycloak generally requires a write connection. Therefore, these replica nodes really represent hot-backups that could be promoted to the primary read-write node if needed to keep the cluster operational.
+Now there are three keycloak Postgres replicas up and running. The primary `keycloakx-cnpg-rw` should be used for read-write operations, and the other replicas (`keycloakx-cnpg-ro`, `keycloakx-cnpg-r`) can be used for read queries and will help scale the application. Under heavy loads, in theory we can create more replicas with `kubectl scale` to serve higher read-only query loads, but keycloak generally requires a write connection. Therefore, these replica nodes really represent hot-backups that could be promoted to the primary read-write node if needed to keep the cluster operational.
 
 ```bash
 ❯ kubectl -n keycloak get services
 NAME                       TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)                    AGE
-keycloak-cnpg-r            ClusterIP   10.111.28.124    <none>        5432/TCP                   3m43s
-keycloak-cnpg-ro           ClusterIP   10.110.90.138    <none>        5432/TCP                   3m43s
-keycloak-cnpg-rw           ClusterIP   10.109.57.188    <none>        5432/TCP                   3m43s
+keycloakx-cnpg-r            ClusterIP   10.111.28.124    <none>        5432/TCP                   3m43s
+keycloakx-cnpg-ro           ClusterIP   10.110.90.138    <none>        5432/TCP                   3m43s
+keycloakx-cnpg-rw           ClusterIP   10.109.57.188    <none>        5432/TCP                   3m43s
 keycloakx-headless         ClusterIP   None             <none>        80/TCP                     4d23h
 keycloakx-http             ClusterIP   10.101.226.135   <none>        9000/TCP,80/TCP,8443/TCP   4d23h
 ```
@@ -181,6 +195,7 @@ By default, the backups will be retained for the number of days defined in value
 | `keycloakx.database.existingSecret`            | Secret to be used for postgres password                                          | `keycloak-pg`                                             |
 | `keycloakx.database.existingSecretKey`         | name of the key in the existingSecret containing the password field              | `password`                                                |
 | `keycloakx.database.vendor`                    | name of the database vendor, only `postgres` supported in Keycloak now           | `postgres`                                                |
+| `keycloakx.database.image.name`                | Full CNPG PostgreSQL image reference; changing it triggers a minor upgrade      | `ghcr.io/cloudnative-pg/postgresql:17.12-standard-trixie` |
 | `keycloakx.database.hostname`                  | the hostname of the database service.                                            | `keycloakx-cnpg-rw`                                       |
 | `keycloakx.database.port`                      | the port used for connecting to the database                                     | `5432`                                                    |
 | `keycloakx.proxy.enabled`                      | true if keycloak is installed behind a proxy like a k8s Ingress                  | `true`                                                    |
@@ -222,7 +237,7 @@ limitations under the License.
 Work on this package was supported by:
 
 - [DataONE](https://dataone.org)
-- Arctic Data Center: NSF-PLR grant #2042102 to M. B. Jones, A. Budden, M. Schildhauer, and J. Dozier
+- Arctic Data Center: NSF grant #2550586 to M.B. Jones, J. Regetz, and N. Greco, and grant #2042102 to M. B. Jones, A. Budden, M. Schildhauer, and J. Dozier
 
 Additional support was provided for collaboration by the National Center for Ecological Analysis and Synthesis, a Center funded by the University of California, Santa Barbara, and the State of California.
 

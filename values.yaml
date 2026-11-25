@@ -228,7 +228,7 @@ keycloakx:
 
     image:
       ## @param keycloakx.database.image.name Required. Full PostgreSQL image reference, e.g. ghcr.io/cloudnative-pg/postgresql:17.12-standard-trixie (a dated tag or @sha256: digest is recommended). Changing it and running helm upgrade performs a rolling minor upgrade. Image catalogs are not supported.
-      name: "ghcr.io/cloudnative-pg/postgresql:17.5"
+      name: "ghcr.io/cloudnative-pg/postgresql:17.12-202611230809-standard-trixie"
 
     ## Settings that control how CNPG rolls out a new image (for example a minor version
     ## upgrade such as 17.5 -> 17.6). CNPG always updates the replicas first, one at a time,
